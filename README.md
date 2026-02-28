@@ -1,80 +1,187 @@
 # Order App (mr-CRM)
 
-A Spring Boot + Thymeleaf + PostgreSQL CRM-style application for managing **customers**, **offers**, and **orders** with **audit logging**, **revision history**, and **Logo ERP integration** capabilities.
+Enterprise-style CRM application built with Spring Boot, PostgreSQL, and Thymeleaf.
 
-> Built as an internship/staj project and evolved into a CRM-like platform with structured workflows and admin tooling.
+This project started as an internship (staj) application and evolved into a structured CRM-like system that models real-world business workflows including customer management, offer & order lifecycle tracking, ERP integration concepts, revision history, and audit logging.
 
----
+------------------------------------------------------------
 
-## ✨ Key Features
+PURPOSE OF THE PROJECT
 
-- **Authentication & Authorization**
-  - Role-based access control (e.g., ADMIN / USER / VIEWER)
-  - Secure login and protected admin areas
+The goal of this project was to go beyond a simple CRUD application and design a more production-like internal business system with:
 
-- **CRM Modules**
-  - Customer management (profiles, CRM fields, interactions)
-  - Offer management (create/edit, workflow transitions)
-  - Order management (create/edit, workflow transitions)
+- Structured domain separation
+- Business workflow transitions
+- Role-based authorization
+- ERP sync logic
+- Revision & audit tracking
+- Database migration discipline
 
-- **Traceability**
-  - **Revision history** for offers and orders
-  - **Audit logging** for critical actions
+It simulates how an internal CRM/ERP-integrated business system would be designed in a real company environment.
 
-- **Integrations**
-  - **Logo ERP integration** (token service + sync jobs)
-  - Sync status tracking (e.g., PENDING / SYNCED / FAILED)
+------------------------------------------------------------
 
-- **Operational / Admin Tools**
-  - Admin user/role management
-  - Settings pages
-  - Import/export utilities
+CORE FEATURES
 
----
+Authentication & Authorization
+- Spring Security based login system
+- Role-based access control (ADMIN / USER / VIEWER)
+- Protected admin pages
 
-## 🧱 Tech Stack
+Customer Management
+- CRM-style customer records
+- Interaction tracking
+- Extended customer fields
+- Import utilities
 
-- **Java** (Spring Boot)
-- **Spring Security**
-- **Thymeleaf**
-- **PostgreSQL**
-- **Flyway** (DB migrations)
-- **Maven**
+Offer Management
+- Offer creation & editing
+- Workflow transitions
+- Revision history support
+- Conversion logic
 
----
+Order Management
+- Order creation & lifecycle
+- Order revisions
+- Status tracking
+- Sync state management
 
-## 📁 Project Structure (High Level)
+Audit & Traceability
+- Audit log entity
+- Actor tracking
+- Metadata storage
+- Action-based logging
 
-- `src/main/java/...`
-  - `auth/` → login, roles, user management
-  - `customer/` → customer domain & pages
-  - `offer/` → offer domain, revisions, workflow
-  - `order/` → order domain, revisions, workflow
-  - `audit/` → audit entities + service
-  - `sync/` → Logo sync jobs & status
-  - `admin/` → admin pages (settings, audit, export, sync)
+ERP Integration Concept
+- Logo ERP token service
+- Sync jobs
+- Sync status tracking (PENDING / SYNCED / FAILED)
 
-- `src/main/resources/`
-  - `templates/` → Thymeleaf views
-  - `static/` → CSS/JS assets
-  - `db/migration/` → Flyway migration scripts
+Admin Tools
+- User management
+- Role management
+- Settings pages
+- Export utilities
+- Sync monitoring pages
 
----
+------------------------------------------------------------
 
-## ▶️ Getting Started (Local)
+ARCHITECTURE OVERVIEW
 
-### 1) Requirements
-- Java (recommended: 17+)
+The application follows a layered architecture:
+
+Client (Browser)
+        ↓
+Controller Layer
+        ↓
+Service Layer
+        ↓
+Repository Layer
+        ↓
+PostgreSQL Database
+
+Design Characteristics:
+- Layered architecture (Controller → Service → Repository)
+- Domain-driven folder separation
+- Migration-based database versioning (Flyway)
+- Explicit workflow modeling (OfferTransitions, OrderTransitions)
+- Revision pattern implementation
+- Audit logging pattern
+- Integration abstraction layer (LogoApiService)
+
+------------------------------------------------------------
+
+TECH STACK
+
+- Java (Spring Boot)
+- Spring Security
+- Thymeleaf
 - PostgreSQL
-- Maven (or use `./mvnw`)
+- Flyway (database migrations)
+- Maven
 
-### 2) Configure Database
-Create a PostgreSQL database and update:
+------------------------------------------------------------
 
-`src/main/resources/application.properties`
+PROJECT STRUCTURE (High-Level)
+
+auth/        → authentication & authorization
+customer/    → customer domain
+offer/       → offer domain + revisions + workflow
+order/       → order domain + revisions + workflow
+audit/       → audit logging
+sync/        → ERP sync logic
+admin/       → admin UI & management
+
+Database migrations:
+src/main/resources/db/migration/
+
+------------------------------------------------------------
+
+RUNNING THE PROJECT LOCALLY
+
+Requirements:
+- Java 17+
+- PostgreSQL
+- Maven (or use Maven Wrapper)
+
+Database Configuration:
+
+Update:
+src/main/resources/application.properties
 
 Example:
-```properties
 spring.datasource.url=jdbc:postgresql://localhost:5432/order_app
 spring.datasource.username=postgres
 spring.datasource.password=YOUR_PASSWORD
+
+Run:
+./mvnw spring-boot:run
+
+Then open:
+http://localhost:8080
+
+------------------------------------------------------------
+
+DATABASE MANAGEMENT
+
+This project uses Flyway for schema versioning.
+
+Migration files:
+V1__init_schema.sql
+...
+V20__audit_actor_username_to_text.sql
+
+Migrations run automatically on application startup.
+
+------------------------------------------------------------
+
+SECURITY NOTES
+
+- Default credentials are for development only.
+- Production secrets should not be committed.
+- Use environment variables or separate profiles for real deployments.
+
+------------------------------------------------------------
+
+FUTURE IMPROVEMENTS
+
+- Docker & Docker Compose setup
+- CI pipeline (GitHub Actions)
+- Dashboard metrics & analytics
+- Retry logic for ERP sync failures
+- API documentation (Swagger / OpenAPI)
+- REST-first API layer extension
+
+------------------------------------------------------------
+
+STATUS
+
+Active development – evolving toward a more production-ready CRM platform.
+
+------------------------------------------------------------
+
+AUTHOR
+
+Süheyla İkbal İçme
+Computer Engineering
+Backend & Business Systems Focus
