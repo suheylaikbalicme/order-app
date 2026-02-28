@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title th:text="'Sistem Ayarları - ' + ${appBrandName}">Sistem Ayarları</title>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+
+    <link rel="stylesheet" href="/styles.css">
+    <link rel="stylesheet" href="/styles-layout-fix.css">
+    <link rel="stylesheet" href="/ui-additions.css">
+
+    <style>
+        /* --- SAYFAYA ÖZEL STİLLER (Global dosyaları bozmamak için) --- */
+
+        /* Layout: Sidebar + İçerik */
+        .settings-wrapper {
+            display: grid;
+            grid-template-columns: 250px 1fr;
+            gap: 24px;
+            align-items: start;
+        }
+
+        /* Sidebar Navigasyon */
+        .settings-nav {
+            position: sticky;
+            top: 100px; /* Topbar yüksekliğine göre ayar */
+            padding-right: 12px;
+        }
+
+        .settings-link {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 16px;
+            margin-bottom: 4px;
+            border-radius: var(--radius);
+            color: var(--muted);
+            font-weight: 500;
+            font-size: 14px;
+            transition: all 0.2s ease;
+            text-decoration: none;
+            border: 1px solid transparent;
+        }
+
+        .settings-link:hover {
+            background: rgba(255,255,255, 0.6);
+            color: var(--primary);
+        }
+
+        .settings-link.active {
+            background: #fff;
+            color: var(--primary);
+            font-weight: 600;
+            box-shadow: var(--shadow-sm);
+            border-color: var(--border);
+        }
+
+        /* Chevron icon for active state */
+        .settings-link::after {
+            content: '›';
+            font-size: 18px;
+            opacity: 0;
+            transform: translateX(-5px);
+            transition: all 0.2s;
+        }
+        .settings-link.active::after {
+            opacity: 1;
+            transform: translateX(0);
+        }
+
+        /* Sidebar Başlıkları */
+        .nav-category {
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--muted);
+            font-weight: 700;
+            margin: 24px 0 8px 12px;
+        }
+        .nav-category:first-child { margin-top: 0; }
+
+        /* Tab İçerik Alanı */
+        .tab-content {
+            display: none; /* Varsayılan gizli */
+            animation: fadeIn 0.3s ease-out;
+        }
+        .tab-content.active {
+            display: block; /* Sadece aktif olan görünür */
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(4px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Toggle Switch (iOS Style) - Globalde olmadığı için buraya ekledik */
+        .toggle-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px;
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            background: #f8fafc; /* Hafif gri */
+            margin-bottom: 12px;
+        }
+        .toggle-info h4 { font-size: 14px; margin: 0 0 2px 0; color: var(--text); }
+        .toggle-info p { margin: 0; font-size: 12px; color: var(--muted); }
+
+        .switch { position: relative; display: inline-block; width: 44px; height: 24px; flex-shrink: 0;}
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #cbd5e1; transition: .3s; border-radius: 34px; }
+        .slider:before { position: absolute; content: ""; height: 18px; width: 18px; left: 3px; bottom: 3px; background-color: white; transition: .3s; border-radius: 50%; box-shadow: 0 1px 2px rgba(0,0,0,0.2); }
+        input:checked + .slider { background-color: var(--primary); } /* Theme primary color */
+        input:checked + .slider:before { transform: translateX(20px); }
+
+        /* Responsive */
+        @media (max-width: 900px) {
+            .settings-wrapper { grid-template-columns: 1fr; gap: 20px; }
+            .settings-nav {
+                position: relative; top: 0;
+                display: flex; overflow-x: auto; padding-bottom: 10px;
+                border-bottom: 1px solid var(--border);
+                margin-bottom: 10px;
+            }
+            .settings-link { white-space: nowrap; margin-right: 8px; margin-bottom: 0; }
+            .nav-category { display: none; }
+            .settings-link::after { display: none; }
+        }
+    </style>
+</head>
+<body class="js"> <div th:replace="fragments/nav :: topbar('Sistem Ayarları')"></div>
+
+<main class="container">
+
+    <header class="page-header">
+        <div class="page-title">
+            <h1 class="h1">Sistem Yapılandırması</h1>
+        </div>
+        <div class="page-actions">
+            <button type="submit" form="settingsForm" class="btn primary">
+                <span>Değişiklikleri Kaydet</span>
+            </button>
+        </div>
+    </header>
+
+    <div class="alert alert-success" th:if="${param.saved}">
+        <strong>Başarılı!</strong> Ayarlar güncellendi ve önbellek temizlendi.
+    </div>
+
+    <form id="settingsForm" method="post" th:action="@{/admin/settings}">
+
+        <div class="settings-wrapper">
+
+            <aside class="settings-nav">
+                <div class="nav-category">Genel Ayarlar</div>
+                <a href="#genel" class="settings-link active" data-tab="genel">Genel Görünüm</a>
+                <a href="#firma" class="settings-link" data-tab="firma">Firma Bilgileri</a>
+                <a href="#yerel" class="settings-link" data-tab="yerel">Yerelleştirme</a>
+
+                <div class="nav-category">Yönetim</div>
+                <a href="#finans" class="settings-link" data-tab="finans">Finans & Para</a>
+                <a href="#erp" class="settings-link" data-tab="erp">ERP & Entegrasyon</a>
+                <a href="#veri" class="settings-link" data-tab="veri">Veri İşlemleri</a>
+
+                <div class="nav-category">Gelişmiş</div>
+                <a href="#kv" class="settings-link" data-tab="kv">Sistem Parametreleri</a>
+            </aside>
+
+            <div class="content-area">
+
+                <div id="genel" class="tab-content active">
+                    <section class="card">
+                        <div class="card-head">
+                            <h3 class="h3">Genel Görünüm</h3>
+                        </div>
+                        <div class="sep" style="margin-top:0;"></div>
+
+                        <div class="grid-2">
+                            <div class="field">
+                                <label>Uygulama Adı (Marka)</label>
+                                <input type="text" th:name="${'s.ui.brandName'}"
+                                       th:value="${settingsMap['ui.brandName']?.value}"
+                                       placeholder="mr-CRM" />
+                                <div class="help">Sol üst köşede ve tarayıcı başlığında görünür.</div>
+                            </div>
+
+                            <div class="field">
+                                <label>Footer Metni</label>
+                                <input type="text" th:name="${'s.ui.footerText'}"
+                                       th:value="${settingsMap['ui.footerText']?.value}"
+                                       placeholder="© 2026 mr-CRM" />
+                            </div>
+                        </div>
+                    </section>
+                </div>
+
+                <div id="firma" class="tab-content">
+                    <section class="card">
+                        <div class="card-head"><h3 class="h3">Firma Bilgileri</h3></div>
+                        <div class="sep" style="margin-top:0;"></div>
+
+                        <div class="grid-2">
+                            <div class="field">
+                                <label>Firma Ünvanı</label>
+                                <input type="text" name="s.company.name"
+                                       th:value="${settingsMap['company.name']?.value}" />
+                            </div>
+                            <div class="field">
+                                <label>Adres</label>
+                                <input type="text" name="s.company.address"
+                                       th:value="${settingsMap['company.address']?.value}" />
+                            </div>
+                            <div class="field">
+                                <label>Vergi Dairesi</label>
+                                <input type="text" name="s.company.taxOffice"
+                                       th:value="${settingsMap['company.taxOffice']?.value}" />
+                            </div>
+                            <div class="field">
+                                <label>Vergi No</label>
+                                <input type="text" name="s.company.taxNo"
+                                       th:value="${settingsMap['company.taxNo']?.value}" />
+                            </div>
+                        </div>
+                    </section>
+                </div>
+
+                <div id="yerel" class="tab-content">
+                    <section class="card">
+                        <div class="card-head"><h3 class="h3">Bölgesel Ayarlar</h3></div>
+                        <div class="sep" style="margin-top:0;"></div>
+                        <div class="grid-2">
+                            <div class="field">
+                                <label>Tarih Formatı</label>
+                                <input type="text" name="s.locale.dateFormat"
+                                       th:value="${settingsMap['locale.dateFormat']?.value}"
+                                       placeholder="dd.MM.yyyy"/>
+                            </div>
+                        </div>
+                    </section>
+                </div>
+
+                <div id="finans" class="tab-content">
+                    <section class="card">
+                        <div class="card-head"><h3 class="h3">Finansal Varsayılanlar</h3></div>
+                        <div class="sep" style="margin-top:0;"></div>
+
+                        <div class="grid-2" style="margin-bottom: 20px;">
+                            <div class="field">
+                                <label>Para Birimi</label>
+                                <input type="text" name="s.finance.defaultCurrency"
+                                       th:value="${settingsMap['finance.defaultCurrency']?.value}" />
+                            </div>
+                            <div class="field">
+                                <label>KDV Oranı (%)</label>
+                                <input type="number" name="s.finance.defaultVatRate"
+                                       th:value="${settingsMap['finance.defaultVatRate']?.value}" />
+                            </div>
+                        </div>
+
+                        <div class="toggle-row">
+                            <div class="toggle-info">
+                                <h4>Varsayılan: KDV Dahil</h4>
+                                <p>Yeni oluşturulan siparişlerde fiyatlar varsayılan olarak KDV dahil hesaplanır.</p>
+                            </div>
+                            <label class="switch">
+                                <input type="hidden" name="s.finance.defaultVatIncluded" value="false"/>
+                                <input type="checkbox" name="s.finance.defaultVatIncluded" value="true"
+                                       th:checked="${settingsMap['finance.defaultVatIncluded']?.value == 'true'}"/>
+                                <span class="slider"></span>
+                            </label>
+                        </div>
+                    </section>
+                </div>
+
+                <div id="erp" class="tab-content">
+                    <section class="card">
+                        <div class="card-head">
+                            <h3 class="h3">Entegrasyon Durumu</h3>
+                            <a href="/admin/sync" class="btn btn-sm ghost">Sync Paneline Git &rarr;</a>
+                        </div>
+                        <div class="sep" style="margin-top:0;"></div>
+
+                        <div class="summary" style="margin-bottom: 24px;">
+                            <div>
+                                <div class="kv-key">Müşteri Sync</div>
+                                <div class="kv-val" th:text="${syncSyncedCustomers}">0</div>
+                            </div>
+                            <div>
+                                <div class="kv-key">Sipariş Sync</div>
+                                <div class="kv-val" th:text="${syncSyncedOrders}">0</div>
+                            </div>
+                            <div>
+                                <div class="kv-key">Son İşlem</div>
+                                <div class="kv-val" th:text="${lastOrderSyncAt != null ? lastOrderSyncAt : '-'}">-</div>
+                            </div>
+                        </div>
+
+                        <div class="field">
+                            <div class="toggle-row">
+                                <div class="toggle-info">
+                                    <h4>Logo ERP Bağlantısı</h4>
+                                    <p>Aktif edildiğinde stok ve cari kartlar canlı sorgulanır.</p>
+                                </div>
+                                <label class="switch">
+                                    <input type="hidden" name="s.logo.enabled" value="false"/>
+                                    <input type="checkbox" name="s.logo.enabled" value="true"
+                                           th:checked="${settingsMap['logo.enabled']?.value == 'true'}"/>
+                                    <span class="slider"></span>
+                                </label>
+                            </div>
+
+                            <div class="toggle-row">
+                                <div class="toggle-info">
+                                    <h4>Otomatik TCMB Kur Servisi</h4>
+                                    <p>Her sabah 15:30 kurlarını sisteme kaydeder.</p>
+                                </div>
+                                <label class="switch">
+                                    <input type="hidden" name="s.fx.enabled" value="false"/>
+                                    <input type="checkbox" name="s.fx.enabled" value="true"
+                                           th:checked="${settingsMap['fx.enabled']?.value == 'true'}"/>
+                                    <span class="slider"></span>
+                                </label>
+                            </div>
+                        </div>
+                    </section>
+                </div>
+
+                <div id="veri" class="tab-content">
+                    <section class="card">
+                        <div class="card-head"><h3 class="h3">Veri Dışa Aktarım</h3></div>
+                        <div class="sep" style="margin-top:0;"></div>
+
+                        <div class="grid-2">
+                            <div class="toggle-row" style="background: #fff;">
+                                <div class="toggle-info">
+                                    <h4>Müşteri Listesi</h4>
+                                    <p>Tüm müşteri veritabanını .csv formatında indir.</p>
+                                </div>
+                                <a class="btn" href="/admin/export/customers.csv">İndir</a>
+                            </div>
+
+                            <div class="toggle-row" style="background: #fff;">
+                                <div class="toggle-info">
+                                    <h4>Sipariş Geçmişi</h4>
+                                    <p>Onaylanan ve bekleyen tüm sipariş dökümü.</p>
+                                </div>
+                                <a class="btn" href="/admin/export/orders.csv">İndir</a>
+                            </div>
+                        </div>
+                    </section>
+                </div>
+
+                <div id="kv" class="tab-content">
+                    <section class="card">
+                        <div class="card-head"><h3 class="h3">Gelişmiş Parametreler (Key-Value)</h3></div>
+                        <div class="sep" style="margin-top:0;"></div>
+
+                        <div class="table-wrap">
+                            <table class="table dense">
+                                <thead>
+                                <tr>
+                                    <th>Anahtar (Key)</th>
+                                    <th>Değer</th>
+                                    <th class="td-right">Güncelleme</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                <tr th:each="s : ${settings}">
+                                    <td>
+                                        <span class="badge" style="font-family:monospace; background:#eff6ff; color:#1e40af;" th:text="${s.key}">key</span>
+                                    </td>
+                                    <td>
+                                        <input type="text" style="padding:4px 8px; height:30px; font-family:monospace; width:100%;"
+                                               th:name="${'s.' + s.key}"
+                                               th:value="${s.value}"/>
+                                    </td>
+                                    <td class="td-right muted" th:text="${s.updatedAt}">-</td>
+                                </tr>
+                                <tr th:if="${#lists.isEmpty(settings)}"><td colspan="3" class="muted" style="text-align:center;">Kayıt yok.</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </section>
+                </div>
+
+            </div> </div> </form>
+
+</main>
+
+<div th:replace="fragments/footer :: footer"></div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        const links = document.querySelectorAll('.settings-link');
+        const contents = document.querySelectorAll('.tab-content');
+
+        function activateTab(tabId) {
+            // 1. Tüm içerikleri gizle
+            contents.forEach(el => el.classList.remove('active'));
+
+            // 2. Linklerden active class'ını sil
+            links.forEach(el => el.classList.remove('active'));
+
+            // 3. İlgili içeriği göster
+            const targetContent = document.getElementById(tabId);
+            if (targetContent) {
+                targetContent.classList.add('active');
+            }
+
+            // 4. İlgili linki aktif yap
+            const targetLink = document.querySelector(`.settings-link[data-tab="${tabId}"]`);
+            if (targetLink) {
+                targetLink.classList.add('active');
+            }
+        }
+
+        // Tıklama Olayı
+        links.forEach(link => {
+            link.addEventListener('click', function(e) {
+                e.preventDefault();
+                const tabId = this.getAttribute('data-tab');
+
+                // URL'e hash ekle (sayfa yenilenirse orada kalsın diye)
+                history.pushState(null, null, '#' + tabId);
+
+                activateTab(tabId);
+            });
+        });
+
+        // Sayfa yüklendiğinde URL'deki hash'i kontrol et
+        const hash = window.location.hash.replace('#', '');
+        if (hash) {
+            activateTab(hash);
+        } else {
+            // Hash yoksa ilk sekmeyi aç (Genel)
+            activateTab('genel');
+        }
+    });
+</script>
+
+</body>
+</html>

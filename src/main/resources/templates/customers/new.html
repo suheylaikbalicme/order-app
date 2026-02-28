@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <title>Yeni Müşteri</title>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <link rel="stylesheet" href="/styles.css">
+    <link rel="stylesheet" href="/ui-additions.css">
+</head>
+<body>
+
+<div th:replace="fragments/nav :: topbar('Yeni Müşteri')"></div>
+
+<main class="container">
+
+    <header class="page-header">
+        <div class="page-title">
+            <h1 class="h1">Yeni Müşteri</h1>
+        </div>
+        <div class="page-actions">
+            <a class="btn ghost" id="backLink" href="/customers">Geri</a>
+        </div>
+    </header>
+
+    <section class="card">
+        <div class="card-head">
+            <div class="card-head-left">
+                <h3 class="h3">Müşteri Bilgileri</h3>
+                <span class="badge pending">LOCAL</span>
+            </div>
+        </div>
+
+        <div class="form-grid">
+            <div class="field">
+                <label for="customerCode">Müşteri Kodu *</label>
+                <input id="customerCode" placeholder="Örn: CARI123" autocomplete="off"/>
+            </div>
+
+            <div class="field">
+                <label for="customerName">Müşteri Adı *</label>
+                <input id="customerName" placeholder="Örn: Emar Yazılım" autocomplete="off"/>
+            </div>
+
+            <div class="field">
+                <label for="phone">Telefon *</label>
+                <input id="phone" placeholder="Örn: +90 5xx xxx xx xx" autocomplete="off"/>
+            </div>
+
+            <div class="field">
+                <label for="email">E-posta *</label>
+                <input id="email" type="email" placeholder="Örn: info@firma.com" autocomplete="off"/>
+            </div>
+
+            <div class="field" style="grid-column: 1 / -1;">
+                <label for="address">Adres *</label>
+                <textarea id="address" placeholder="Adres..." rows="3"></textarea>
+            </div>
+
+            <div class="field" style="grid-column: 1 / -1;">
+                <label for="notes">Notlar </label>
+                <textarea id="notes" placeholder="Müşteriyle ilgili notlar..." rows="3"></textarea>
+            </div>
+        </div>
+
+        <div class="form-actions">
+            <button id="saveBtn" class="btn primary" type="button">Kaydet</button>
+            <a class="btn" id="cancelLink" href="/customers">Vazgeç</a>
+        </div>
+
+        <div id="msg" class="alert" style="display:none;"></div>
+    </section>
+
+</main>
+
+<script>
+    const msg = document.getElementById('msg');
+    const btn = document.getElementById('saveBtn');
+    const params = new URLSearchParams(window.location.search);
+    const rawReturn = params.get('return');
+    const returnTo = (rawReturn && rawReturn.startsWith('/')) ? rawReturn : '/customers';
+    document.getElementById('backLink').href = returnTo;
+    document.getElementById('cancelLink').href = returnTo;
+
+    function showMsg(type, text) {
+        msg.style.display = 'block';
+        msg.className = 'alert ' + (type === 'success' ? 'alert-success' : 'alert-error');
+        msg.textContent = text;
+    }
+
+    function hideMsg() {
+        msg.style.display = 'none';
+        msg.textContent = '';
+        msg.className = 'alert';
+    }
+
+    function setBusy(isBusy) {
+        btn.disabled = isBusy;
+        btn.textContent = isBusy ? 'Kaydediliyor…' : 'Kaydet';
+    }
+
+    btn.addEventListener('click', async () => {
+        hideMsg();
+
+        const customerCode = document.getElementById('customerCode').value?.trim();
+        const customerName = document.getElementById('customerName').value?.trim();
+        const phone = document.getElementById('phone').value?.trim();
+        const email = document.getElementById('email').value?.trim();
+        const address = document.getElementById('address').value?.trim();
+        const notes = document.getElementById('notes').value?.trim();
+
+        if (!customerCode || !customerName || !phone || !email || !address) {
+            showMsg('error', 'Kod, ad, telefon, e-posta ve adres zorunlu.');
+            return;
+        }
+
+        setBusy(true);
+        try {
+            const res = await fetch('/api/customers', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+                body: JSON.stringify({ customerCode, customerName, phone, email, address, notes })
+            });
+
+            if (!res.ok) {
+                const text = await res.text();
+                throw new Error(res.status + ' ' + text);
+            }
+
+            const data = await res.json();
+            const st = (data?.syncStatus ?? 'PENDING');
+            showMsg('success', 'Kaydedildi. SyncStatus=' + st + ' (id=' + (data?.id ?? '-') + ')');
+
+            // CRM akışında en sağlıklısı: oluşturduktan sonra müşteri detayına gidip
+            // dosya ve etkileşim eklemeye devam etmek.
+            setTimeout(() => { window.location.href = '/customers/' + (data?.id ?? '') + '?return=' + encodeURIComponent(returnTo); }, 450);
+        } catch (e) {
+            showMsg('error', 'Hata: ' + (e?.message ?? String(e)));
+        } finally {
+            setBusy(false);
+        }
+    });
+</script>
+
+
+<div th:replace="fragments/footer :: footer"></div>
+
+</body>
+</html>

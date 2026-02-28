@@ -1,0 +1,77 @@
+/* === Layout restore + consistent wide container (added) === */
+/* Keeps pages wide and prevents tables from creating huge empty areas */
+:root{
+  --container-max: 1320px;   /* adjust if you want wider (1440) */
+  --container-pad: 20px;
+  --table-font: 13px;        /* dense-ish but readable */
+  --table-pad-y: 10px;
+  --table-pad-x: 12px;
+}
+
+/* Global container width */
+.container{
+  width: min(100%, var(--container-max));
+  padding-left: var(--container-pad);
+  padding-right: var(--container-pad);
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* If you have a page wrapper, make it full width but aligned */
+.page, .page-content, .content{
+  width: 100%;
+}
+
+/* Table wrappers should not force horizontal scroll unless truly needed */
+.table-wrap{
+  width: 100%;
+  overflow-x: auto;
+}
+.table-wrap .table{
+  width: 100%;
+  min-width: 0 !important;   /* critical: prevents leftover/min-width blowups */
+  table-layout: auto;
+}
+
+/* Dense table mode */
+.table.dense th,
+.table.dense td{
+  padding: var(--table-pad-y) var(--table-pad-x);
+  font-size: var(--table-font);
+}
+.table.dense th{ font-weight: 600; }
+.table.dense .btn,
+.table.dense .badge{
+  font-size: 12px;
+  padding: 6px 10px;
+}
+
+/* Actions cell: keep compact and avoid blowing up column width */
+.td-actions,
+.actions-cell,
+.table td.actions,
+.table td.col-actions{
+  white-space: nowrap;
+  width: 1%;
+}
+.actions{
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
+/* Prevent very long strings from forcing the table wider */
+.table td, .table th{
+  max-width: 0;              /* enables ellipsis rules below */
+}
+.table td .ellipsis,
+.table td .truncate{
+  display: inline-block;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* === End layout restore === */

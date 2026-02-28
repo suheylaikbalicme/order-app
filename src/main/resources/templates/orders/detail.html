@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <title>Sipariş Detay - mr-CRM</title>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <link rel="stylesheet" href="/styles.css">
+    <link rel="stylesheet" href="/ui-additions.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        /* A4 Kağıt Görünümü */
+        .order-paper {
+            background: #fff;
+            max-width: 850px;
+            margin: 0 auto;
+            padding: 50px;
+            border-radius: 4px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+            border: 1px solid #e2e8f0;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* --- STATUS STAMP (YENİ TASARIM) --- */
+        .status-stamp {
+            position: absolute;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%) rotate(-10deg);
+            border: 4px solid;
+            padding: 10px 30px;
+            font-weight: 900;
+            font-size: 24px;
+            text-transform: uppercase;
+            opacity: 0.2;
+            letter-spacing: 4px;
+            border-radius: 8px;
+            pointer-events: none;
+            z-index: 0;
+        }
+        /* Renkler */
+        .st-DRAFT { color: #64748b; border-color: #64748b; }
+        .st-WAITING_APPROVAL { color: #f97316; border-color: #f97316; opacity: 0.8; }
+        .st-APPROVED { color: #16a34a; border-color: #16a34a; opacity: 0.8; }
+        .st-SYNCED { color: #4f46e5; border-color: #4f46e5; opacity: 0.8; }
+        .st-FAILED { color: #dc2626; border-color: #dc2626; opacity: 0.8; }
+        .st-CANCELLED { color: #991b1b; border-color: #991b1b; opacity: 0.8; text-decoration: line-through; }
+
+        /* Başlıklar */
+        .paper-header {
+            display: flex; justify-content: space-between; align-items: flex-start;
+            margin-bottom: 40px; border-bottom: 2px solid #f1f5f9; padding-bottom: 20px;
+            position: relative; z-index: 1;
+        }
+        .ph-brand h1 { font-size: 28px; font-weight: 800; color: #1e293b; margin: 0; letter-spacing: -0.5px; }
+        .ph-brand-sub { color:#64748b; margin-top:4px; font-size: 13px; font-weight: 500; }
+
+        .ph-meta { text-align: right; }
+        .ph-meta div { margin-bottom: 6px; font-size: 13px; color: #64748b; }
+        .ph-meta strong { color: #334155; display: inline-block; width: 110px; font-weight: 600; }
+
+        /* --- DETAYLI MÜŞTERİ ALANI (YENİ) --- */
+        .client-section {
+            background: #f8fafc;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 30px;
+            border: 1px solid #f1f5f9;
+        }
+        .client-header {
+            font-size: 11px; text-transform: uppercase; color: #94a3b8; font-weight: 700; margin-bottom: 10px; letter-spacing: 0.5px;
+        }
+        .client-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 20px;
+        }
+        .client-name { font-size: 18px; font-weight: 700; color: #1e293b; margin-bottom: 8px; }
+        .client-address { font-size: 14px; color: #475569; line-height: 1.5; margin-bottom: 8px; }
+
+        .client-contact div {
+            display: flex; align-items: center; gap: 8px;
+            font-size: 13px; color: #475569; margin-bottom: 6px;
+        }
+        .client-contact i { color: #cbd5e1; width: 16px; text-align: center; }
+
+        /* Tablo */
+        .paper-table { width: 100%; border-collapse: collapse; margin-bottom: 30px; }
+        .paper-table th { text-align: left; font-size: 11px; text-transform: uppercase; color: #64748b; padding: 12px 10px; border-bottom: 2px solid #e2e8f0; letter-spacing: 0.5px; }
+        .paper-table td { padding: 14px 10px; border-bottom: 1px solid #f1f5f9; font-size: 14px; color: #334155; }
+        .paper-table .num { text-align: right; }
+        .item-code { color: #94a3b8; font-size: 12px; margin-right: 6px; font-family: monospace; }
+
+        /* Footer */
+        .paper-footer { display: flex; justify-content: flex-end; }
+        .totals { width: 280px; }
+        .row-t { display: flex; justify-content: space-between; font-size: 14px; padding: 8px 0; border-bottom: 1px solid #f1f5f9; color: #64748b; }
+        .row-t.grand { font-size: 18px; font-weight: 800; color: #1e293b; border-top: 2px solid #e2e8f0; margin-top: 8px; padding-top: 12px; }
+
+        /* --- NOTLAR ALANI (YENİ) --- */
+        .notes-section {
+            margin-top: 40px; padding: 20px;
+            background: #fffbeb; border: 1px solid #fef3c7;
+            border-radius: 8px; font-size: 13px; color: #92400e;
+        }
+        .note-text {
+            margin-top: 8px;
+            white-space: pre-wrap; /* Satır boşluklarını korur */
+            font-family: inherit;
+            line-height: 1.6;
+        }
+
+        /* Teknik Kart */
+        .tech-card { max-width: 850px; margin: 20px auto; background: #1e293b; color: #cbd5e1; padding: 20px; border-radius: 8px; font-family: monospace; font-size: 12px; }
+        .tech-card h3 { color: #fff; font-size: 14px; border-bottom: 1px solid #334155; padding-bottom: 10px; margin-bottom: 10px; }
+    </style>
+</head>
+<body style="background: #f1f5f9;">
+
+<div th:replace="fragments/nav :: topbar('Sipariş Detay')"></div>
+
+<main class="container" style="padding-top: 20px;">
+
+    <div style="max-width: 850px; margin: 0 auto 20px auto; display: flex; justify-content: space-between; align-items: center;">
+        <a class="btn ghost" href="/orders">← Listeye Dön</a>
+
+        <div class="actions">
+            <a class="btn primary" th:if="${canEdit}" th:href="@{'/orders/' + ${order.id} + '/edit'}">Revize Et </a>
+            <!-- Revise flow: go to edit page (reason will be entered there) -->
+            <a class="btn warning"
+               th:if="${canRevise and order.status.name() != 'DRAFT'}"
+               th:href="@{'/orders/' + ${order.id} + '/edit?mode=revise'}">
+                Revize Et
+            </a>
+            <a class="btn ghost" th:href="@{'/orders/' + ${order.id} + '/revisions'}">Revize Geçmişi</a>
+
+            <form th:if="${canEdit}" th:action="@{'/orders/' + ${order.id} + '/cancel'}" method="post" style="display:inline;">
+                <button class="btn danger" type="submit" onclick="return confirm('İptal edilsin mi?')">İptal</button>
+            </form>
+
+            <form sec:authorize="hasAnyRole('ADMIN','USER')" th:if="${order.status.toString() == 'DRAFT' and canEdit}" th:action="@{'/orders/' + ${order.id} + '/submit'}" method="post" style="display:inline;">
+                <button class="btn primary" type="submit">Onaya Gönder</button>
+            </form>
+
+            <form sec:authorize="hasRole('ADMIN')" th:if="${canApprove}" th:action="@{'/orders/' + ${order.id} + '/approve'}" method="post" style="display:inline;">
+                <button class="btn success" style="background:#22c55e; color:#fff;" type="submit">✓ Onayla</button>
+            </form>
+        </div>
+    </div>
+
+    <div style="max-width: 850px; margin: 0 auto 20px auto;">
+        <div class="alert" th:if="${param.syncError}" style="background:#fee2e2; color:#991b1b; border:1px solid #fecaca; padding:10px; border-radius:6px;">
+            <b>Sync Başarısız:</b> <span th:text="${param.syncError[0]}">Err</span>
+        </div>
+        <div class="alert" th:if="${param.syncOk}" style="background:#dcfce7; color:#166534; border:1px solid #bbf7d0; padding:10px; border-radius:6px;">
+            <b>Başarılı:</b> Sync isteği kuyruğa alındı.
+        </div>
+    </div>
+
+    <article class="order-paper">
+
+        <div class="status-stamp"
+             th:classappend="'st-' + ${order.status}"
+             th:text="${order.status}">STATUS</div>
+
+        <header class="paper-header">
+            <div class="ph-brand">
+                <h1>SİPARİŞ FORMU</h1>
+                <div class="ph-brand-sub">mr-CRM Ticari Yazılım Çözümleri A.Ş.</div>
+            </div>
+            <div class="ph-meta">
+                <div><strong>Sipariş No:</strong> <span th:text="'#' + ${order.id}">#1</span></div>
+                <div><strong>Tarih:</strong> <span th:text="${order.orderDate != null ? #temporals.format(order.orderDate, 'dd.MM.yyyy') : '-'}">-</span></div>
+                <div><strong>Para Birimi:</strong> <span th:text="${order.currency}">TRY</span></div>
+                <div><strong>Oluşturan:</strong> <span th:text="${order.createdByUsername}">Admin</span></div>
+            </div>
+        </header>
+
+        <section class="client-section">
+            <div class="client-header">SAYIN / FİRMA</div>
+            <div class="client-grid">
+                <div>
+                    <div class="client-name" th:text="${order.customerName}">Müşteri Adı</div>
+                    <div class="client-address">
+                        <i class="fa-solid fa-location-dot" style="color:#cbd5e1; margin-right:6px;"></i>
+                        <span th:text="${customer != null ? customer.address : '-'}">Adres Satırı</span>
+                    </div>
+                </div>
+                <div class="client-contact">
+                    <div><i class="fa-solid fa-phone"></i> <span th:text="${customer != null ? customer.phone : '-'}">Tel</span></div>
+                    <div><i class="fa-solid fa-envelope"></i> <span th:text="${customer != null ? customer.email : '-'}">Email</span></div>
+                    <div><i class="fa-solid fa-hashtag"></i> <span th:text="${order.customerCode}">KOD</span></div>
+                </div>
+            </div>
+        </section>
+
+        <table class="paper-table">
+            <thead>
+            <tr>
+                <th>Ürün / Hizmet</th>
+                <th class="num">Miktar</th>
+                <th class="num">Birim Fiyat</th>
+                <th class="num">İsk. %</th>
+                <th class="num">KDV %</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="it : ${order.items}">
+                <td>
+                    <span class="item-code" th:text="${it.itemCode}">KOD</span>
+                    <span th:text="${it.itemName}">Ad</span>
+                </td>
+                <td class="num" th:text="${it.quantity}">1</td>
+                <td class="num" th:text="${it.unitPrice}">100</td>
+                <td class="num" th:text="${it.discountRate}">0</td>
+                <td class="num" th:text="${it.vatRate}">20</td>
+            </tr>
+            <tr th:if="${#lists.isEmpty(order.items)}">
+                <td colspan="5" style="text-align:center; color:#94a3b8; padding:20px;">Kalem bulunamadı.</td>
+            </tr>
+            </tbody>
+        </table>
+
+        <div class="paper-footer">
+            <div class="totals">
+                <div class="row-t"><span>Ara Toplam</span> <span th:text="${subTotal}">0</span></div>
+                <div class="row-t"><span>İskonto</span> <span th:text="${discountTotal}">0</span></div>
+                <div class="row-t"><span>KDV</span> <span th:text="${vatTotal}">0</span></div>
+                <div class="row-t grand"><span>GENEL TOPLAM</span> <span th:text="${grandTotal}">0</span></div>
+            </div>
+        </div>
+
+        <div class="notes-section" th:if="${order.note != null and order.note != ''}">
+            <strong><i class="fa-solid fa-circle-info"></i> Sipariş Notları:</strong>
+            <div class="note-text" th:text="${order.note}">...</div>
+        </div>
+
+    </article>
+
+    <div class="tech-card">
+        <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #334155; padding-bottom:10px; margin-bottom:10px;">
+            <h3 style="border:none; margin:0; padding:0;">🔌 Logo ERP Entegrasyon Durumu</h3>
+            <form sec:authorize="hasRole('ADMIN')"
+                  th:if="${order.status.toString() == 'APPROVED' or order.status.toString() == 'FAILED'}"
+                  th:action="@{'/orders/' + ${order.id} + '/sync'}" method="post">
+                <button class="btn sm" style="background:#fff; color:#0f172a; border:none; font-size:11px;" type="submit">Manuel Sync Tetikle</button>
+            </form>
+        </div>
+
+        <div style="display:grid; grid-template-columns: repeat(4, 1fr); gap:20px;">
+            <div>
+                <div style="color:#64748b;">Sync Status</div>
+                <div style="font-weight:bold; color:#fff;" th:text="${order.syncStatus != null ? order.syncStatus : 'N/A'}">-</div>
+            </div>
+            <div>
+                <div style="color:#64748b;">Logo Ref</div>
+                <div style="color:#fff;" th:text="${order.logoRef != null ? order.logoRef : '-'}">-</div>
+            </div>
+            <div>
+                <div style="color:#64748b;">Last Try</div>
+                <div style="color:#fff;" th:text="${order.lastSyncAt != null ? #temporals.format(order.lastSyncAt, 'dd.MM HH:mm:ss') : '-'}">-</div>
+            </div>
+            <div>
+                <div style="color:#64748b;">Error Message</div>
+                <div style="color:#fca5a5;" th:text="${order.syncError != null ? order.syncError : 'No Error'}">-</div>
+            </div>
+        </div>
+    </div>
+
+</main>
+
+<div th:replace="fragments/footer :: footer"></div>
+
+</body>
+</html>

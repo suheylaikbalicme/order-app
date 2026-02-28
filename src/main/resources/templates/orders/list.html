@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <title>Siparişler - mr-CRM</title>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <link rel="stylesheet" href="/styles.css">
+    <link rel="stylesheet" href="/ui-additions.css">
+    <style>
+        /* Sipariş Durum Renkleri */
+        .status-badge { padding: 4px 12px; border-radius: 99px; font-size: 11px; font-weight: 700; text-transform: uppercase; display: inline-block; letter-spacing: 0.5px; }
+
+        /* İş Süreci Durumları */
+        .st-DRAFT { background: #f1f5f9; color: #475569; }
+        .st-WAITING_APPROVAL { background: #ffedd5; color: #c2410c; }
+        .st-APPROVED { background: #dcfce7; color: #15803d; }
+        .st-CANCELLED { background: #fee2e2; color: #b91c1c; }
+
+        /* Sync Durumları (Özel Renkler) */
+        .st-SYNCED { background: #e0e7ff; color: #4338ca; } /* İndigo */
+        .st-FAILED { background: #fce7f3; color: #be185d; } /* Pembe */
+        .st-PENDING { background: #fef3c7; color: #b45309; } /* Sarı */
+
+        /* Modern Tablo */
+        .modern-table th { background: #f8fafc; color: #64748b; font-weight: 600; padding: 14px 16px; font-size: 12px; text-transform: uppercase; border-bottom: 2px solid #e2e8f0; }
+        .modern-table td { padding: 14px 16px; border-bottom: 1px solid #f1f5f9; vertical-align: middle; font-size: 14px; }
+        .modern-table tr:hover { background: #f8fafc; }
+
+        /* Filtre Grubu */
+        .filter-group { display: inline-flex; background: #f1f5f9; padding: 4px; border-radius: 8px; margin-bottom: 20px; }
+        .filter-btn { padding: 6px 16px; border-radius: 6px; font-size: 13px; font-weight: 600; color: #64748b; transition: all 0.2s; text-decoration: none; }
+        .filter-btn:hover { color: #1e293b; background: rgba(255,255,255,0.5); }
+        .filter-btn.active { background: #fff; color: #4f46e5; box-shadow: 0 1px 2px rgba(0,0,0,0.1); }
+    </style>
+</head>
+
+<body>
+
+<div th:replace="fragments/nav :: topbar('Siparişler')"></div>
+
+<main class="container">
+
+    <header class="page-header" style="margin-bottom: 24px;">
+        <div class="page-title">
+            <h1 class="h1">Sipariş Yönetimi</h1>
+        </div>
+        <div class="page-actions">
+            <a class="btn primary shadow-sm" href="/orders/new" sec:authorize="hasAnyRole('ADMIN','USER')" style="padding: 10px 24px;">
+                <span style="margin-right:8px; font-size:16px;">+</span> Yeni Sipariş
+            </a>
+        </div>
+    </header>
+
+    <div class="filter-group">
+        <a class="filter-btn" th:classappend="${statusFilter == 'ALL'} ? ' active' : ''" href="/orders?status=ALL">Tümü</a>
+        <a class="filter-btn" th:classappend="${statusFilter == 'DRAFT'} ? ' active' : ''" href="/orders?status=DRAFT">Taslak</a>
+        <a class="filter-btn" th:classappend="${statusFilter == 'WAITING_APPROVAL'} ? ' active' : ''" href="/orders?status=WAITING_APPROVAL">Onay Bekleyen</a>
+        <a class="filter-btn" th:classappend="${statusFilter == 'APPROVED'} ? ' active' : ''" href="/orders?status=APPROVED">Onaylı</a>
+        <a class="filter-btn" th:classappend="${statusFilter == 'SYNCED'} ? ' active' : ''" href="/orders?status=SYNCED">Sync</a>
+        <a class="filter-btn" th:classappend="${statusFilter == 'FAILED'} ? ' active' : ''" href="/orders?status=FAILED">Hata</a>
+    </div>
+
+    <section class="card" style="border-radius: 16px; overflow: hidden; border: 1px solid #e2e8f0; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);">
+        <div class="table-wrap">
+            <table class="table modern-table" style="width: 100%; border-collapse: collapse;">
+                <thead>
+                <tr>
+                    <th style="width:70px;">#ID</th>
+                    <th>Müşteri Bilgisi</th>
+                    <th>Durum</th>
+                    <th>Sync Durumu</th>
+                    <th>Tutar (KDV Dahil)</th>
+                    <th>Oluşturan</th>
+                    <th class="td-right">İşlemler</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="o : ${orders}">
+                    <td style="font-weight: bold; color: #94a3b8;" th:text="'#' + ${o.id}">1</td>
+                    <td>
+                        <div style="font-weight:700; color: #1e293b; font-size: 15px;" th:text="${o.customerName}">Müşteri</div>
+                        <div style="font-size: 12px; color: #64748b;" th:text="${o.customerCode}">CODE</div>
+                    </td>
+
+                    <td>
+                        <span class="status-badge"
+                              th:classappend="'st-' + ${o.status}"
+                              th:text="${o.status}">DRAFT</span>
+                    </td>
+
+                    <td>
+                         <span class="status-badge"
+                               th:if="${o.syncStatus != null}"
+                               th:classappend="'st-' + ${o.syncStatus}"
+                               th:text="${o.syncStatus}">PENDING</span>
+                        <span th:if="${o.syncStatus == null}" class="muted" style="font-size:11px;">-</span>
+                    </td>
+
+                    <td>
+                        <div style="font-weight: 800; color: #0f172a; letter-spacing: .2px;">
+                            <span th:if="${o.grandTotal != null}"
+                                th:text="|${#numbers.formatDecimal(o.grandTotal, 1, 'COMMA', 2, 'POINT')} ${o.currency != null ? o.currency : ''}|">
+                                0.00 TRY
+                            </span>
+                            <span th:if="${o.grandTotal == null}" class="muted">-</span>
+                        </div>
+
+                        <div style="font-size: 12px; color: #64748b; margin-top: 4px;">
+                            <span th:if="${o.vatRate != null}" th:text="|KDV ${o.vatRate}%|"></span>
+                            <span th:if="${o.vatRate == null}">KDV: satır bazlı</span>
+                        </div>
+                    </td>
+
+
+                    <td>
+                        <div style="font-size: 13px;" th:text="${o.createdByUsername}">User</div>
+                        <div style="font-size: 11px; color: #94a3b8;" th:text="${o.createdAt != null ? #temporals.format(o.createdAt, 'dd.MM HH:mm') : '-'}">Date</div>
+                    </td>
+
+                    <td class="td-right">
+                        <div style="display: flex; gap: 6px; justify-content: flex-end;">
+                            <a class="btn sm ghost" th:href="@{'/orders/' + ${o.id}}">İncele/Düzenle</a>
+
+                            <form sec:authorize="hasAnyRole('ADMIN','USER')"
+                                  th:if="${o.status.name() == 'DRAFT'}"
+                                  th:action="@{'/orders/' + ${o.id} + '/submit'}" method="post">
+                                <button class="btn sm primary" type="submit" data-confirm="Onaya gönderilsin mi?">Gönder</button>
+                            </form>
+
+                            <form sec:authorize="hasRole('ADMIN')"
+                                  th:if="${o.status.name() == 'WAITING_APPROVAL'}"
+                                  th:action="@{'/orders/' + ${o.id} + '/approve'}" method="post">
+                                <button class="btn sm success" style="background:#dcfce7; color:#166534;" type="submit">Onayla</button>
+                            </form>
+
+                            <form sec:authorize="hasRole('ADMIN')"
+                                  th:if="${o.status.name() == 'APPROVED' or o.status.name() == 'FAILED'}"
+                                  th:action="@{'/orders/' + ${o.id} + '/sync'}" method="post">
+                                <button class="btn sm" style="background:#e0e7ff; color:#4338ca;" type="submit">Sync</button>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+
+                <tr th:if="${#lists.isEmpty(orders)}">
+                    <td colspan="7" style="padding: 60px; text-align: center;">
+                        <div style="font-size: 40px; margin-bottom: 10px;">📦</div>
+                        <div style="font-weight: 600; color: #1e293b;">Henüz sipariş yok</div>
+                        <div style="color: #64748b; font-size: 14px;">Yeni bir sipariş oluşturarak başlayın.</div>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+</main>
+
+<div th:replace="fragments/footer :: footer"></div>
+</body>
+</html>

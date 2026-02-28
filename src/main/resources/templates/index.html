@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <title>Order App</title>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <link rel="stylesheet" href="/styles.css">
+    <link rel="stylesheet" href="/ui-additions.css">
+    <link rel="stylesheet" href="/styles-layout-fix.css">
+</head>
+<body>
+
+<div th:replace="fragments/nav :: topbar('Anasayfa')"></div>
+
+<main class="container">
+    <header class="page-header">
+        <div class="page-title">
+            <h1 class="h1">Anasayfa</h1>
+            <p class="muted">Order App — local DB + Logo ERP entegrasyonu</p>
+        </div>
+    </header>
+
+    <section class="card">
+        <div class="card-head">
+            <div class="card-head-left">
+                <h3 class="h3">Hoş geldin!</h3>
+                <span class="badge info">Session OK</span>
+            </div>
+        </div>
+
+        <p class="muted">Başarıyla giriş yaptın.</p>
+
+        <div class="form-actions">
+            <a class="btn primary" href="/orders/new" sec:authorize="hasAnyRole('ADMIN','USER')">+ Yeni Sipariş</a>
+            <a class="btn" href="/orders">Siparişleri Gör</a>
+            <a class="btn" href="/customers">Müşteriler</a>
+            <a class="btn" href="/admin/users" sec:authorize="hasRole('ADMIN')">Kullanıcı Yönetimi</a>
+            <a class="btn" href="/admin/sync" sec:authorize="hasRole('ADMIN')">Sync</a>
+        </div>
+    </section>
+</main>
+
+
+<div th:replace="fragments/footer :: footer"></div>
+
+</body>
+</html>

@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Giriş</title>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+
+<!-- Login için özel brand (KALACAK) -->
+<div class="login-brand">
+    <img src="/img/logo.png" alt="mr-CRM" class="brand-logo">
+    <div class="login-title">mr-CRM</div>
+    <div class="login-subtitle">Sipariş • Teklif • Müşteri yönetimi</div>
+</div>
+
+<!-- ❌ NAVBAR TAMAMEN KALDIRILDI -->
+<!-- <div th:replace="fragments/nav :: topbar('Order App')"></div> -->
+
+<main class="container">
+    <section class="card login-card">
+        <h3>Giriş Yap</h3>
+        <p class="muted">Devam etmek için bilgilerinizi girin</p>
+
+        <form th:action="@{/login}" method="post">
+            <div class="field">
+                <label>Kullanıcı Adı</label>
+                <input type="text" name="username" autocomplete="username" required/>
+            </div>
+
+            <div class="field" style="margin-top:10px;">
+                <label>Şifre</label>
+                <input type="password" name="password" autocomplete="current-password" required/>
+            </div>
+
+            <div class="row" style="margin-top:12px;justify-content:flex-end;">
+                <button class="btn primary" type="submit">Giriş Yap</button>
+            </div>
+
+            <div th:if="${param.error}" class="muted" style="margin-top:10px;color:#991b1b;font-weight:700;">
+                Hatalı kullanıcı adı veya şifre.
+            </div>
+
+            <div th:if="${param.logout}" class="muted" style="margin-top:10px;color:#065f46;font-weight:700;">
+                Çıkış yapıldı.
+            </div>
+        </form>
+    </section>
+</main>
+
+
+<div th:replace="fragments/footer :: footer"></div>
+
+</body>
+</html>

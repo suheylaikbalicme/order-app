@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Teklif Revize Geçmişi - mr-CRM</title>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <link rel="stylesheet" href="/styles.css">
+    <link rel="stylesheet" href="/ui-additions.css">
+</head>
+<body>
+<div th:replace="fragments/nav :: topbar('Teklif Revize Geçmişi')"></div>
+<main class="container">
+    <input type="hidden" id="offerId" th:value="${offer.id}"/>
+
+    <div id="msg" class="alert" style="display:none; margin: 12px 0;"></div>
+
+    <header class="page-header" style="margin-bottom: 16px;">
+        <div class="page-title">
+            <h1 class="h1" th:text="'Teklif #' + ${offer.id} + ' - Revize Geçmişi'">Revize Geçmişi</h1>
+        </div>
+        <div class="page-actions">
+            <a class="btn ghost" th:href="@{'/offers/' + ${offer.id}}">Detaya Dön</a>
+        </div>
+    </header>
+
+    <div class="table-wrap rev-table-wrap">
+        <table class="table compact rev-table" id="revTable">
+            <thead>
+            <tr>
+                <th style="width:72px;">No</th>
+                <th style="width:190px;">Tarih</th>
+                <th style="width:160px;">Kullanıcı</th>
+                <th style="width:260px;">Neden</th>
+                <th>Özet</th>
+                <th style="width:180px;">Değişiklik</th>
+                <th style="width:240px;">Snapshot</th>
+            </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+    </div>
+
+    <!-- Snapshot Modal -->
+    <div id="snapModal" style="display:none; position:fixed; inset:0; background:rgba(15,23,42,0.55); z-index:999; padding: 30px;">
+        <div style="max-width: 980px; margin: 0 auto; background:#fff; border-radius: 12px; border:1px solid rgba(226,232,240,0.9); box-shadow: 0 18px 60px rgba(0,0,0,0.25); overflow:hidden;">
+            <div style="display:flex; align-items:center; justify-content:space-between; padding: 12px 14px; border-bottom:1px solid #e2e8f0;">
+                <b id="snapTitle">Snapshot</b>
+                <button class="btn ghost" type="button" onclick="closeSnapshot()">Kapat</button>
+            </div>
+            <pre id="snapPre" style="margin:0; padding: 14px; max-height: 70vh; overflow:auto; white-space: pre-wrap;"></pre>
+        </div>
+    </div>
+</main>
+
+<script>
+    function closeSnapshot() {
+      const m = document.getElementById('snapModal');
+      if (m) m.style.display = 'none';
+    }
+</script>
+<script src="/mrcrm-helpers.js"></script>
+<script src="/offers-revisions.js"></script>
+<div th:replace="fragments/footer :: footer"></div>
+</body>
+</html>

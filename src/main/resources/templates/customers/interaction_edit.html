@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <title>Etkileşim Düzenle - mr-CRM</title>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <link rel="stylesheet" href="/styles.css">
+    <link rel="stylesheet" href="/ui-additions.css">
+</head>
+<body>
+
+<div th:replace="fragments/nav :: topbar('Etkileşim Düzenle')"></div>
+
+<main class="container" th:with="c=${customer}, i=${interaction}">
+
+    <header class="page-header">
+        <div class="page-title">
+            <h1 class="h1">Etkileşim Düzenle</h1>
+            <p class="muted" th:text="${c.customerCode + ' • ' + c.customerName}">Müşteri</p>
+        </div>
+        <div class="page-actions">
+            <a class="btn ghost" th:href="@{'/customers/' + ${c.id}}">Geri</a>
+        </div>
+    </header>
+
+    <section class="card" style="max-width:760px;">
+        <form class="form-grid" th:action="@{'/customers/' + ${c.id} + '/interactions/' + ${i.id} + '/edit'}" method="post">
+            <div class="field">
+                <label>Tarih</label>
+                <input class="input" type="date" name="interactionDate" th:value="${i.interactionDate}" required />
+            </div>
+            <div class="field">
+                <label>Tür</label>
+                <select class="input" name="interactionType" required>
+                    <option value="CALL" th:selected="${i.interactionType == 'CALL'}">CALL</option>
+                    <option value="MEETING" th:selected="${i.interactionType == 'MEETING'}">MEETING</option>
+                    <option value="EMAIL" th:selected="${i.interactionType == 'EMAIL'}">EMAIL</option>
+                    <option value="NOTE" th:selected="${i.interactionType == 'NOTE'}">NOTE</option>
+                </select>
+            </div>
+            <div class="field" style="grid-column:1/-1;">
+                <label>Başlık</label>
+                <input class="input" name="title" th:value="${i.title}" required />
+            </div>
+            <div class="field" style="grid-column:1/-1;">
+                <label>Açıklama (opsiyonel)</label>
+                <textarea name="description" rows="4" th:text="${i.description}"></textarea>
+            </div>
+            <div class="field" style="grid-column:1/-1; display:flex; justify-content:flex-end; gap:10px;">
+                <a class="btn" th:href="@{'/customers/' + ${c.id}}">Vazgeç</a>
+                <button class="btn primary" type="submit">Kaydet</button>
+            </div>
+        </form>
+    </section>
+
+</main>
+
+
+<div th:replace="fragments/footer :: footer"></div>
+
+</body>
+</html>

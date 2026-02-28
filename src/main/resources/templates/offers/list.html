@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <title>Teklifler - mr-CRM</title>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <link rel="stylesheet" href="/styles.css">
+    <link rel="stylesheet" href="/ui-additions.css">
+    <style>
+        /* Liste Sayfasına Özel Badge Renkleri */
+        .status-badge { padding: 4px 12px; border-radius: 99px; font-size: 12px; font-weight: 600; text-transform: uppercase; display: inline-block; }
+        .st-DRAFT { background: #f1f5f9; color: #475569; }
+        .st-WAITING_APPROVAL { background: #ffedd5; color: #c2410c; }
+        .st-APPROVED { background: #dcfce7; color: #15803d; }
+        .st-REJECTED { background: #fee2e2; color: #b91c1c; }
+
+        /* Süresi doldu rozeti */
+        .expired-badge {
+            padding: 4px 10px;
+            border-radius: 999px;
+            font-size: 12px;
+            font-weight: 700;
+            display: inline-block;
+            background: #fee2e2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            margin-left: 8px;
+            text-transform: uppercase;
+        }
+
+        /* Tablo İyileştirmeleri */
+        .modern-table th { background: #f8fafc; color: #64748b; font-weight: 600; padding: 16px; font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 2px solid #e2e8f0; }
+        .modern-table td { padding: 16px; border-bottom: 1px solid #f1f5f9; vertical-align: middle; }
+        .modern-table tr:hover { background: #f8fafc; }
+
+        /* Aksiyon Butonları */
+        .action-icon { width: 32px; height: 32px; display: inline-flex; align-items: center; justify-content: center; border-radius: 6px; color: #64748b; transition: all 0.2s; }
+        .action-icon:hover { background: #e0e7ff; color: #4338ca; }
+
+        /* Disabled butonlar daha anlaşılır olsun */
+        .btn[disabled], button[disabled] {
+            opacity: .55;
+            cursor: not-allowed;
+            filter: grayscale(0.15);
+        }
+    </style>
+</head>
+<body>
+
+<div th:replace="fragments/nav :: topbar('Teklifler')"></div>
+
+<main class="container">
+    <header class="page-header" style="margin-bottom: 30px;">
+        <div class="page-title">
+            <h1 class="h1">Teklif Yönetimi</h1>
+        </div>
+        <div class="page-actions">
+            <a class="btn primary shadow-sm" href="/offers/new" sec:authorize="hasAnyRole('ADMIN','USER')" style="padding: 10px 24px;">
+                <span style="margin-right:8px; font-size:16px;">+</span> Yeni Teklif Oluştur
+            </a>
+        </div>
+    </header>
+
+    <section class="card" style="border-radius: 16px; overflow: hidden; border: 1px solid #e2e8f0; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);">
+        <div class="table-wrap">
+            <table class="table modern-table" style="width: 100%; border-collapse: collapse;">
+                <thead>
+                <tr>
+                    <th style="width: 60px;">#ID</th>
+                    <th>Müşteri Bilgisi</th>
+                    <th>Vade / Süre</th>
+                    <th>Durum</th>
+                    <th class="td-right">İşlemler</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="o : ${offers}">
+                    <td style="font-weight: bold; color: #94a3b8;" th:text="'#' + ${o.id}">#1</td>
+
+                    <td>
+                        <div style="font-weight:700; color: #1e293b; font-size: 15px;" th:text="${o.customerName}">Müşteri</div>
+                        <div style="font-size: 13px; color: #64748b; display: flex; align-items: center; gap: 6px;">
+                            <span th:text="${o.customerCode}">code</span>
+                        </div>
+                    </td>
+
+                    <td>
+                        <!-- Geçerlilik (validity) = teklif tarihinden itibaren kaç gün kabul edilebilir? -->
+                        <div style="font-size: 14px; color: #334155;"
+                             th:text="${(o.validityDays == null) ? 'Süresiz' : ((o.validityDays <= 0) ? 'Bugün geçerli' : (o.validityDays + ' gün geçerli'))}">
+                            -
+                        </div>
+                        <!-- Süresi dolduysa küçük açıklama -->
+                        <div th:if="${expiredMap[o.id]}"
+                             style="margin-top: 4px; font-size: 12px; color:#991b1b;">
+                            Süresi dolduğu için işlem kısıtlı.
+                        </div>
+                    </td>
+
+                    <td>
+                        <span class="status-badge"
+                              th:classappend="'st-' + ${o.status}"
+                              th:text="${o.status}">DRAFT</span>
+
+                        <span th:if="${expiredMap[o.id]}" class="expired-badge">SÜRESİ DOLDU</span>
+                    </td>
+
+                    <td class="td-right">
+                        <div style="display: flex; gap: 6px; justify-content: flex-end; flex-wrap: wrap;">
+                            <a class="btn sm ghost" th:href="@{'/offers/' + ${o.id}}">İncele/Düzenle</a>
+
+                            <!-- DRAFT -> Submit (Expired ise pasif) -->
+                            <form th:if="${o.status.name() == 'DRAFT'}"
+                                  th:action="@{'/offers/' + ${o.id} + '/submit'}"
+                                  method="post"
+                                  sec:authorize="hasAnyRole('ADMIN','USER')">
+                                <button class="btn sm primary" type="submit"
+                                        data-confirm="Onaya gönderilsin mi?"
+                                        th:disabled="${expiredMap[o.id]}"
+                                        th:title="${expiredMap[o.id] ? 'Teklifin süresi dolmuş. Onaya gönderilemez.' : ''}">
+                                    Gönder
+                                </button>
+                            </form>
+
+                            <!-- WAITING_APPROVAL -> Approve (Expired ise pasif) -->
+                            <form th:if="${o.status.name() == 'WAITING_APPROVAL'}"
+                                  th:action="@{'/offers/' + ${o.id} + '/approve'}"
+                                  method="post"
+                                  sec:authorize="hasRole('ADMIN')">
+                                <button class="btn sm success" style="background:#dcfce7; color:#166534;"
+                                        type="submit"
+                                        th:disabled="${expiredMap[o.id]}"
+                                        th:title="${expiredMap[o.id] ? 'Teklifin süresi dolmuş. Onaylanamaz.' : ''}">
+                                    Onayla
+                                </button>
+                            </form>
+
+                            <!-- WAITING_APPROVAL -> Reject (Reddetmeye izin veriyoruz, expired olsa bile) -->
+                            <form th:if="${o.status.name() == 'WAITING_APPROVAL'}"
+                                  th:action="@{'/offers/' + ${o.id} + '/reject'}"
+                                  method="post"
+                                  sec:authorize="hasRole('ADMIN')">
+                                <button class="btn sm danger" type="submit">Red</button>
+                            </form>
+
+                            <!-- Siparişe dönüştürüldüyse -->
+                            <a th:if="${o.convertedOrderId != null}" class="btn sm"
+                               style="background:#f3e8ff; color:#6b21a8;"
+                               th:href="@{'/orders/' + ${o.convertedOrderId}}">
+                                Sipariş ➔
+                            </a>
+                        </div>
+                    </td>
+                </tr>
+
+                <tr th:if="${#lists.isEmpty(offers)}">
+                    <td colspan="5" style="padding: 60px; text-align: center;">
+                        <div style="font-size: 40px; margin-bottom: 10px;">📂</div>
+                        <div style="font-weight: 600; color: #1e293b;">Henüz kayıtlı teklif yok</div>
+                        <div style="color: #64748b; font-size: 14px;">Yeni bir teklif oluşturarak başlayın.</div>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+</main>
+
+<div th:replace="fragments/footer :: footer"></div>
+</body>
+</html>

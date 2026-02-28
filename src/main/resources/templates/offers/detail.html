@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <title>Teklif Detayı - mr-CRM</title>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <link rel="stylesheet" href="/styles.css">
+    <link rel="stylesheet" href="/ui-additions.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        /* A4 Kağıt Görünümü */
+        .invoice-container {
+            max-width: 850px;
+            margin: 0 auto;
+            background: #fff;
+            padding: 50px;
+            border-radius: 4px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+            border: 1px solid #e2e8f0;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Status stamp */
+        .status-stamp {
+            position: absolute;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%) rotate(-10deg);
+            border: 4px solid;
+            padding: 10px 30px;
+            font-weight: 900;
+            font-size: 24px;
+            text-transform: uppercase;
+            opacity: 0.2;
+            letter-spacing: 4px;
+            border-radius: 8px;
+            pointer-events: none;
+            z-index: 0;
+        }
+        .st-DRAFT { color: #64748b; border-color: #64748b; }
+        .st-WAITING_APPROVAL { color: #f97316; border-color: #f97316; opacity: 0.8; }
+        .st-APPROVED { color: #16a34a; border-color: #16a34a; opacity: 0.8; }
+        .st-REJECTED { color: #dc2626; border-color: #dc2626; opacity: 0.8; }
+
+        .inv-header {
+            display: flex; justify-content: space-between; align-items: flex-start;
+            margin-bottom: 40px; border-bottom: 2px solid #f1f5f9; padding-bottom: 20px;
+            position: relative; z-index: 1;
+        }
+        .brand h1 { font-size: 28px; font-weight: 800; color: #1e293b; margin: 0; letter-spacing: -0.5px; }
+        .brand-sub { color:#64748b; margin-top:4px; font-size: 13px; font-weight: 500; }
+
+        .meta-data { text-align: right; }
+        .meta-item { margin-bottom: 6px; font-size: 13px; color: #64748b; }
+        .meta-item strong { color: #334155; display: inline-block; width: 110px; font-weight: 600; }
+
+        .client-section {
+            background: #f8fafc;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 30px;
+            border: 1px solid #f1f5f9;
+        }
+        .client-header {
+            font-size: 11px; text-transform: uppercase; color: #94a3b8; font-weight: 700; margin-bottom: 10px; letter-spacing: 0.5px;
+        }
+        .client-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 20px;
+        }
+        .client-name { font-size: 18px; font-weight: 700; color: #1e293b; margin-bottom: 8px; }
+        .client-address { font-size: 14px; color: #475569; line-height: 1.5; margin-bottom: 8px; }
+
+        .client-contact div {
+            display: flex; align-items: center; gap: 8px;
+            font-size: 13px; color: #475569; margin-bottom: 6px;
+        }
+        .client-contact i { color: #cbd5e1; width: 16px; text-align: center; }
+
+        .inv-table { width: 100%; border-collapse: collapse; margin-bottom: 30px; }
+        .inv-table th { text-align: left; padding: 12px 10px; border-bottom: 2px solid #e2e8f0; font-size: 11px; text-transform: uppercase; color: #64748b; letter-spacing: 0.5px; }
+        .inv-table td { padding: 14px 10px; border-bottom: 1px solid #f1f5f9; font-size: 14px; color: #334155; }
+        .inv-table .num { text-align: right; }
+        .inv-table tr:last-child td { border-bottom: none; }
+        .item-code { color: #94a3b8; font-size: 12px; margin-right: 6px; font-family: monospace; }
+
+        .inv-footer { display: flex; justify-content: flex-end; }
+        .totals-box { width: 280px; }
+        .t-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #f1f5f9; font-size: 14px; color: #64748b; }
+        .t-row.grand { color: #1e293b; font-weight: 800; font-size: 18px; border-bottom: none; border-top: 2px solid #e2e8f0; margin-top: 8px; padding-top: 12px; }
+
+        .notes-section {
+            margin-top: 40px; padding: 20px;
+            background: #fffbeb; border: 1px solid #fef3c7;
+            border-radius: 8px; font-size: 13px; color: #92400e;
+        }
+        .note-text {
+            margin-top: 8px;
+            white-space: pre-wrap;
+            font-family: inherit;
+            line-height: 1.6;
+        }
+
+        .action-bar { max-width: 850px; margin: 0 auto 20px auto; display: flex; justify-content: space-between; align-items: center; }
+    </style>
+</head>
+<body style="background: #f1f5f9;">
+
+<div th:replace="fragments/nav :: topbar('Teklif Detayı')"></div>
+
+<main class="container" style="padding-top: 20px;">
+
+    <div class="action-bar">
+        <a class="btn ghost" href="/offers">← Geri Dön</a>
+
+        <div class="actions">
+            <a class="btn" th:if="${offer.status.name() == 'DRAFT'}" th:href="@{'/offers/' + ${offer.id} + '/edit'}">Revize Et</a>
+
+            <!-- Revise flow: go to edit page (reason will be entered there) -->
+            <a class="btn warning"
+               th:if="${canRevise and offer.status.name() != 'DRAFT' and offer.convertedOrderId == null}"
+               th:href="@{'/offers/' + ${offer.id} + '/edit?mode=revise'}">
+                Revize Et
+            </a>
+
+            <a class="btn ghost" th:href="@{'/offers/' + ${offer.id} + '/revisions'}">Revize Geçmişi</a>
+
+            <!-- Submit: blocked when expired -->
+            <form th:if="${offer.status.name() == 'DRAFT'}"
+                  th:action="@{'/offers/' + ${offer.id} + '/submit'}"
+                  method="post" style="display:inline"
+                  sec:authorize="hasAnyRole('ADMIN','USER')">
+                <button class="btn primary" type="submit" data-confirm="Emin misiniz?"
+                        th:disabled="${expired}"
+                        th:title="${expired ? 'Teklifin süresi dolmuş. Onaya gönderilemez.' : ''}">
+                    Onaya Gönder
+                </button>
+            </form>
+
+            <!-- Convert: blocked when expired -->
+            <form th:if="${offer.status.name() == 'APPROVED' and offer.convertedOrderId == null}"
+                  th:action="@{'/offers/' + ${offer.id} + '/convert-to-order'}"
+                  method="post" style="display:inline"
+                  sec:authorize="hasAnyRole('ADMIN','USER')">
+                <button class="btn primary" style="background: #7e22ce;" type="submit"
+                        th:disabled="${expired}"
+                        th:title="${expired ? 'Teklifin süresi dolmuş. Siparişe dönüştürülemez.' : ''}">
+                    Siparişe Dönüştür
+                </button>
+            </form>
+
+            <a th:if="${offer.convertedOrderId != null}" class="btn" th:href="@{'/orders/' + ${offer.convertedOrderId}}">Siparişi Görüntüle</a>
+
+            <!-- Approve blocked when expired -->
+            <form th:if="${offer.status.name() == 'WAITING_APPROVAL'}"
+                  th:action="@{'/offers/' + ${offer.id} + '/approve'}"
+                  method="post" style="display:inline"
+                  sec:authorize="hasRole('ADMIN')">
+                <button class="btn success" style="background:#22c55e; color:#fff;" type="submit"
+                        th:disabled="${expired}"
+                        th:title="${expired ? 'Teklifin süresi dolmuş. Onaylanamaz.' : ''}">
+                    ✓ Onayla
+                </button>
+            </form>
+
+            <!-- Reject allowed even if expired -->
+            <form th:if="${offer.status.name() == 'WAITING_APPROVAL'}"
+                  th:action="@{'/offers/' + ${offer.id} + '/reject'}"
+                  method="post" style="display:inline"
+                  sec:authorize="hasRole('ADMIN')">
+                <button class="btn danger" style="background:#ef4444; color:#fff;" type="submit">✗ Reddet</button>
+            </form>
+        </div>
+    </div>
+
+    <article class="invoice-container">
+
+        <!-- Expired banner -->
+        <div th:if="${expired}"
+             style="position:relative; z-index:2; margin-bottom: 14px; padding: 12px 14px; border-radius: 10px; border: 1px solid #fecaca; background:#fff1f2; color:#9f1239; font-weight:700;">
+            ⏱ Teklifin süresi dolmuş.
+            <span th:if="${validUntil != null}"
+                  style="font-weight:600; color:#7f1d1d;"
+                  th:text="'Son geçerlilik: ' + ${validUntil}">
+            </span>
+        </div>
+
+        <div class="status-stamp" th:classappend="'st-' + ${offer.status}" th:text="${offer.status}">DRAFT</div>
+
+        <header class="inv-header">
+            <div class="brand">
+                <h1>TEKLİF FORMU</h1>
+                <div class="brand-sub">mr-CRM Ticari Yazılım Çözümleri A.Ş.</div>
+            </div>
+            <div class="meta-data">
+                <div class="meta-item"><strong>Belge No:</strong> <span th:text="'#' + ${offer.id}">#001</span></div>
+                <div class="meta-item"><strong>Tarih:</strong> <span th:text="${offer.offerDate}">2026-01-01</span></div>
+                <div class="meta-item"><strong>Geçerlilik:</strong>
+                    <span th:text="${(offer.validityDays == null) ? 'Süresiz' : ((offer.validityDays <= 0) ? 'Bugün' : (offer.validityDays + ' Gün'))}">7 Gün</span>
+                </div>
+                <div class="meta-item"><strong>Son Tarih:</strong>
+                    <span th:text="${validUntil != null ? validUntil : '-'}">2026-01-08</span>
+                </div>
+                <div class="meta-item"><strong>Oluşturan:</strong> <span th:text="${offer.createdByUsername}">Admin</span></div>
+            </div>
+        </header>
+
+        <section class="client-section">
+            <div class="client-header">SAYIN / FİRMA</div>
+            <div class="client-grid">
+                <div>
+                    <div class="client-name" th:text="${offer.customerName}">Müşteri Adı</div>
+                    <div class="client-address">
+                        <i class="fa-solid fa-location-dot" style="color:#cbd5e1; margin-right:6px;"></i>
+                        <span th:text="${customer != null ? customer.address : '-'}">Adres Satırı</span>
+                    </div>
+                </div>
+                <div class="client-contact">
+                    <div><i class="fa-solid fa-phone"></i> <span th:text="${customer != null ? customer.phone : '-'}">+90 555...</span></div>
+                    <div><i class="fa-solid fa-envelope"></i> <span th:text="${customer != null ? customer.email : '-'}">email@mail.com</span></div>
+                    <div><i class="fa-solid fa-hashtag"></i> <span th:text="${offer.customerCode}">CARI001</span></div>
+                </div>
+            </div>
+        </section>
+
+        <table class="inv-table">
+            <thead>
+            <tr>
+                <th>Ürün / Hizmet</th>
+                <th class="num">Miktar</th>
+                <th class="num">Birim Fiyat</th>
+                <th class="num">İsk. %</th>
+                <th class="num">KDV %</th>
+                <th class="num">Tutar</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="it : ${offer.items}">
+                <td>
+                    <span class="item-code" th:text="${it.itemCode}">KOD</span>
+                    <span th:text="${it.itemName}">Ürün Adı</span>
+                </td>
+                <td class="num" th:text="${it.quantity}">1</td>
+                <td class="num" th:text="${it.unitPrice} + ' ' + ${offer.currency}">100</td>
+                <td class="num" th:text="${it.discountRate}">0</td>
+                <td class="num" th:text="${it.vatRate}">20</td>
+                <td class="num" style="font-weight:600;" th:text="${it.quantity * it.unitPrice}">100</td>
+            </tr>
+            </tbody>
+        </table>
+
+        <div class="inv-footer">
+            <div class="totals-box">
+                <div class="t-row"><span>Ara Toplam</span> <span th:text="${offer.subtotalAmount} + ' ' + ${offer.currency}">0.00</span></div>
+                <div class="t-row"><span>İskonto</span> <span th:text="${offer.discountTotal} + ' ' + ${offer.currency}">0.00</span></div>
+                <div class="t-row"><span>KDV Toplam</span> <span th:text="${offer.vatTotal} + ' ' + ${offer.currency}">0.00</span></div>
+                <div class="t-row grand"><span>GENEL TOPLAM</span> <span th:text="${offer.grandTotal} + ' ' + ${offer.currency}">0.00</span></div>
+            </div>
+        </div>
+
+        <div class="notes-section" th:if="${offer.note != null and offer.note != ''}">
+            <strong><i class="fa-solid fa-circle-info"></i> Notlar & Koşullar:</strong>
+            <div class="note-text" th:text="${offer.note}">...</div>
+        </div>
+
+    </article>
+
+</main>
+
+<div th:replace="fragments/footer :: footer"></div>
+
+
+
+</body>
+</html>

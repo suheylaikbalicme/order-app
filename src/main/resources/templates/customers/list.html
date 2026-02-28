@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <title>Müşteriler</title>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <link rel="stylesheet" href="/styles.css">
+    <link rel="stylesheet" href="/ui-additions.css">
+
+    <style>
+        :root {
+            --primary: #4f46e5;
+            --bg-body: #f8fafc;
+            --border-color: #e2e8f0;
+            --text-main: #334155;
+            --text-muted: #64748b;
+        }
+        body { background-color: var(--bg-body); color: var(--text-main); }
+
+        /* KPI Kartları */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+        .stat-card {
+            background: #fff;
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+        }
+        .stat-icon {
+            width: 48px; height: 48px;
+            border-radius: 10px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 20px;
+        }
+        .stat-info h4 { margin: 0; color: var(--text-muted); font-size: 13px; font-weight: 500; text-transform: uppercase;}
+        .stat-info div { font-size: 24px; font-weight: 700; color: #1e293b; }
+
+        /* Modern Tablo ve Kart */
+        .modern-card {
+            background: #fff;
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+            overflow: hidden;
+        }
+
+        /* Tab Yapısı */
+        .tabs-header {
+            display: flex;
+            border-bottom: 1px solid var(--border-color);
+            background: #fff;
+            padding: 0 20px;
+        }
+        .tab-btn {
+            padding: 18px 16px;
+            font-weight: 600;
+            color: var(--text-muted);
+            border-bottom: 2px solid transparent;
+            cursor: pointer;
+            transition: all 0.2s;
+            background: transparent;
+            border: none;
+            font-size: 14px;
+        }
+        .tab-btn:hover { color: var(--primary); }
+        .tab-btn.active { color: var(--primary); border-bottom-color: var(--primary); }
+
+        .tab-content { display: none; padding: 0; }
+        .tab-content.active { display: block; }
+
+        /* Arama Alanı */
+        .filter-bar {
+            padding: 16px 20px;
+            border-bottom: 1px solid var(--border-color);
+            background: #fcfcfc;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .search-input {
+            padding: 10px 16px;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            width: 300px;
+            font-size: 14px;
+            background: #fff url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="%2394a3b8" viewBox="0 0 16 16"><path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z"/></svg>') no-repeat 95% center;
+        }
+
+        /* Liste Görünümü */
+        .customer-row {
+            display: flex;
+            align-items: center;
+            padding: 14px 24px;
+            border-bottom: 1px solid var(--border-color);
+            transition: background 0.1s;
+        }
+        .customer-row:last-child { border-bottom: none; }
+        .customer-row:hover { background: #f8fafc; }
+
+        .c-avatar {
+            width: 40px; height: 40px;
+            border-radius: 50%;
+            background: #e0e7ff;
+            color: var(--primary);
+            display: flex; align-items: center; justify-content: center;
+            font-weight: 700;
+            font-size: 14px;
+            margin-right: 16px;
+            flex-shrink: 0;
+        }
+        .c-info { flex: 1; }
+        .c-name { font-weight: 600; color: #1e293b; font-size: 14px; }
+        .c-code { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+        .c-meta { width: 150px; text-align: right; font-size: 13px; color: var(--text-muted); }
+        .c-status { width: 120px; text-align: center; }
+        .c-action { width: 100px; text-align: right; }
+
+        /* Badge Stilleri */
+        .badge-soft { padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: 600; display: inline-block;}
+        .bg-purple { background: #f3e8ff; color: #7e22ce; }
+        .bg-green { background: #dcfce7; color: #15803d; }
+        .bg-orange { background: #ffedd5; color: #c2410c; }
+        .bg-gray { background: #f1f5f9; color: #475569; }
+
+    </style>
+</head>
+<body>
+
+<div th:replace="fragments/nav :: topbar('Müşteriler')"></div>
+
+<main class="container">
+
+    <header style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+        <div>
+            <h1 class="h1" style="margin:0;">Müşteri Portföyü</h1>
+        </div>
+        <div sec:authorize="hasAnyRole('ADMIN','USER')">
+            <a class="btn primary" href="/customers/new" style="border-radius: 8px; padding: 10px 20px;">
+                <span style="margin-right: 6px;">+</span> Yeni Müşteri
+            </a>
+        </div>
+    </header>
+
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-icon bg-purple">🏢</div>
+            <div class="stat-info">
+                <h4>Logo Kayıtları</h4>
+                <div id="statLogoCount">-</div>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon bg-orange">⚡</div>
+            <div class="stat-info">
+                <h4>Sync Bekleyen</h4>
+                <div th:text="${localCustomers.size()}">0</div>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon bg-green">✅</div>
+            <div class="stat-info">
+                <h4>Aktif Müşteri</h4>
+                <div th:text="${activeCrmCount}">0</div>
+            </div>
+        </div>
+    </div>
+
+    <section class="modern-card">
+
+        <div class="tabs-header">
+            <button class="tab-btn active" onclick="openTab(event, 'tab-local')">
+                Potansiyel / Yerel Müşteriler
+                <span class="badge-soft bg-orange" style="margin-left:8px;" th:text="${localCustomers.size()}">0</span>
+            </button>
+            <button class="tab-btn" onclick="openTab(event, 'tab-logo')">
+                Logo ERP Kayıtları
+                <span id="tabLogoCount" class="badge-soft bg-purple" style="margin-left:8px;">0</span>
+            </button>
+        </div>
+
+        <div id="tab-local" class="tab-content active">
+            <div th:if="${#lists.isEmpty(localCustomers)}" style="padding: 40px; text-align: center;">
+                <div style="font-size: 48px; margin-bottom: 16px;">📭</div>
+                <h3 style="margin-bottom: 8px;">Henüz yerel müşteri yok</h3>
+                <p class="muted">Yeni bir potansiyel müşteri oluşturarak başlayın.</p>
+            </div>
+
+            <div th:if="${!#lists.isEmpty(localCustomers)}">
+                <div class="customer-row" th:each="c : ${localCustomers}">
+                    <div class="c-avatar"
+                         th:style="'background:' + (${c.syncStatus == 'SYNCED'} ? '#dcfce7; color:#15803d' : '#ffedd5; color:#c2410c')"
+                         th:text="${#strings.substring(c.customerName,0,1)}">A</div>
+
+                    <div class="c-info">
+                        <div class="c-name" th:text="${c.customerName}">Müşteri Adı</div>
+                        <div class="c-code" th:text="${c.customerCode}">KOD123</div>
+                    </div>
+
+                    <div class="c-meta" style="margin-right: 20px;">
+                        <span style="display:block; font-size:10px; text-transform:uppercase;">Oluşturan</span>
+                        <span th:text="${c.createdByUsername}">Admin</span>
+                    </div>
+
+                    <div class="c-status">
+                        <span class="badge-soft"
+                              th:classappend="${c.syncStatus == 'SYNCED'} ? ' bg-green' :
+                                             (${c.syncStatus == 'FAILED'} ? ' bg-purple' : ' bg-orange')"
+                              th:text="${c.syncStatus}">
+                        </span>
+                    </div>
+
+                    <div class="c-action">
+                        <a class="btn sm ghost" th:href="@{'/customers/' + ${c.id}}">Detay &rarr;</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="tab-logo" class="tab-content">
+            <div class="filter-bar">
+                <input type="text" id="logoSearch" class="search-input" placeholder="Kod veya İsim ile ara..." onkeyup="filterLogoList()">
+                <span class="badge-soft bg-gray">Read-Only</span>
+            </div>
+
+            <div id="logoCustomersError" class="alert alert-error" style="display:none; margin: 20px;"></div>
+
+            <div id="logoLoading" style="padding: 40px; text-align: center; color: var(--text-muted);">
+                Veriler Logo ERP'den çekiliyor...
+            </div>
+
+            <div id="logoListContainer">
+            </div>
+        </div>
+
+    </section>
+
+</main>
+
+<script>
+    // Tab Kontrolü
+    function openTab(evt, tabName) {
+        var i, tabcontent, tablinks;
+        tabcontent = document.getElementsByClassName("tab-content");
+        for (i = 0; i < tabcontent.length; i++) {
+            tabcontent[i].style.display = "none";
+            tabcontent[i].classList.remove("active");
+        }
+        tablinks = document.getElementsByClassName("tab-btn");
+        for (i = 0; i < tablinks.length; i++) {
+            tablinks[i].className = tablinks[i].className.replace(" active", "");
+        }
+        document.getElementById(tabName).style.display = "block";
+        document.getElementById(tabName).classList.add("active");
+        evt.currentTarget.className += " active";
+    }
+
+    // Logo Müşterileri Yönetimi
+    let allLogoCustomers = []; // Arama için veriyi tutalım
+
+    async function loadLogoCustomers() {
+        const container = document.getElementById('logoListContainer');
+        const err = document.getElementById('logoCustomersError');
+        const statCount = document.getElementById('statLogoCount');
+        const tabCount = document.getElementById('tabLogoCount');
+        const loader = document.getElementById('logoLoading');
+
+        try {
+            // Örnek: limit arttırılabilir veya pagination eklenebilir
+            const res = await fetch('/api/arps?offset=0&limit=500&sort=Code', {
+                headers: { 'Accept': 'application/json' }
+            });
+
+            if (!res.ok) throw new Error('Veri alınamadı');
+
+            const payload = await res.json();
+            const rows = Array.isArray(payload) ? payload : (payload.rows ?? []);
+
+            allLogoCustomers = rows; // Global değişkene ata
+
+            // İstatistikleri güncelle
+            statCount.textContent = rows.length;
+            tabCount.textContent = rows.length;
+
+            renderLogoList(rows);
+            loader.style.display = 'none';
+
+        } catch (e) {
+            loader.style.display = 'none';
+            err.style.display = 'block';
+            err.textContent = 'Bağlantı hatası: ' + e.message;
+        }
+    }
+
+    function renderLogoList(data) {
+        const container = document.getElementById('logoListContainer');
+        container.innerHTML = '';
+
+        if (data.length === 0) {
+            container.innerHTML = '<div style="padding:20px; text-align:center; color:#94a3b8;">Kayıt bulunamadı.</div>';
+            return;
+        }
+
+        // Virtual scroll olmadığı için render limiti koymak performans için iyidir (ilk 100 göster)
+        // Ancak arama yapınca hepsi içinde ararız.
+        const renderLimit = 100;
+
+        data.slice(0, renderLimit).forEach(c => {
+            const code = c.code ?? c.Code ?? '';
+            const name = c.title ?? c.Title ?? c.name ?? c.Name ?? '';
+            // Rastgele renk efekti için ismin ilk harfini al
+            const initial = name.charAt(0) || '?';
+
+            const itemHtml = `
+                <div class="customer-row">
+                    <div class="c-avatar" style="background: #f1f5f9; color: #64748b;">${initial}</div>
+                    <div class="c-info">
+                        <div class="c-name">${name}</div>
+                        <div class="c-code">${code}</div>
+                    </div>
+                     <div class="c-meta">
+                        LOGO ERP
+                    </div>
+                </div>
+            `;
+            container.insertAdjacentHTML('beforeend', itemHtml);
+        });
+
+        if(data.length > renderLimit) {
+            container.insertAdjacentHTML('beforeend', `<div style="padding:10px; text-align:center; font-size:12px; color:#94a3b8;">+${data.length - renderLimit} kayıt daha var (aramayı kullanın)</div>`);
+        }
+    }
+
+    // Arama Fonksiyonu
+    function filterLogoList() {
+        const term = document.getElementById('logoSearch').value.toLowerCase();
+        if(term.length < 2 && term.length > 0) return; // Çok kısa aramaları engelle (opsiyonel)
+
+        const filtered = allLogoCustomers.filter(c => {
+            const code = (c.code ?? c.Code ?? '').toLowerCase();
+            const name = (c.title ?? c.Title ?? c.name ?? c.Name ?? '').toLowerCase();
+            return code.includes(term) || name.includes(term);
+        });
+
+        renderLogoList(filtered);
+    }
+
+    // Başlat
+    loadLogoCustomers();
+</script>
+
+
+<div th:replace="fragments/footer :: footer"></div>
+
+</body>
+</html>

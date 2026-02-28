@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="tr" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="'Hesabım - ' + ${appBrandName != null ? appBrandName : 'mr-CRM'}">Hesabım</title>
+
+    <link rel="stylesheet" href="/styles.css">
+    <link rel="stylesheet" href="/styles-layout-fix.css">
+    <link rel="stylesheet" href="/ui-additions.css">
+
+    <style>
+        /* Profil Sayfasına Özel Ufak Dokunuşlar */
+        .profile-header-centered {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            padding-bottom: 20px;
+        }
+        .profile-name {
+            font-size: 18px;
+            font-weight: 700;
+            margin-top: 12px;
+            color: #1e293b;
+        }
+        .profile-meta {
+            font-size: 13px;
+            color: #64748b;
+            margin-top: 4px;
+        }
+        .upload-zone {
+            background: #f8fafc;
+            border: 1px dashed #cbd5e1;
+            border-radius: 8px;
+            padding: 16px;
+            margin-top: 16px;
+        }
+    </style>
+</head>
+<body>
+
+<div th:replace="fragments/nav :: topbar('Hesabım')"></div>
+
+<main class="container">
+
+    <header class="page-header">
+        <div class="page-title">
+            <h1 class="h1">Hesabım</h1>
+        </div>
+        <div class="page-actions">
+            <a class="btn ghost" href="/logout">
+                <i style="font-style: normal;"></i> Güvenli Çıkış
+            </a>
+        </div>
+    </header>
+
+    <div th:if="${successMessage}" class="alert alert-success">
+        <i style="font-style:normal; font-size:16px;">✅</i>
+        <span th:text="${successMessage}">İşlem başarılı.</span>
+    </div>
+    <div th:if="${errorMessage}" class="alert alert-error">
+        <i style="font-style:normal; font-size:16px;">⚠️</i>
+        <span th:text="${errorMessage}">Bir hata oluştu.</span>
+    </div>
+
+    <div class="grid-2">
+
+        <section class="card">
+            <div class="card-head">
+                <h3 class="h3">Profil Bilgileri</h3>
+            </div>
+            <div class="sep" style="margin-top:0;"></div>
+
+            <div class="profile-header-centered">
+                <div class="avatar-lg" style="width: 120px; height: 180px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
+                    <img th:src="@{/avatars/me(v=${user.avatarUpdatedAt != null ? user.avatarUpdatedAt.toEpochSecond() : 0})}"
+                         alt="avatar"
+                         style="width: 100%; height: 100%; object-fit: cover;"
+                         onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                    <div class="avatar-fallback-lg" style="display:none; font-size: 48px;">👤</div>
+                </div>
+
+                <div class="profile-name" th:text="${user.username}">username</div>
+
+                <div class="profile-meta">
+                    <span th:each="role : ${user.roles}"
+                          class="badge" style="background: #e0e7ff; color: #4338ca; margin: 0 2px;"
+                          th:text="${#strings.replace(role.name, 'ROLE_', '')}">ADMIN</span>
+                </div>
+
+                <div style="margin-top: 8px;">
+                     <span class="badge"
+                           th:classappend="${user.enabled} ? 'approved' : 'cancelled'"
+                           th:text="${user.enabled ? 'Hesap Aktif' : 'Hesap Pasif'}">Aktif</span>
+                </div>
+            </div>
+
+            <div class="sep"></div>
+
+            <form method="post" action="/profile/avatar" enctype="multipart/form-data">
+                <label class="label" style="margin-bottom: 8px; display:block;">Profil Fotoğrafını Güncelle</label>
+
+                <div class="upload-zone">
+                    <div style="display: flex; gap: 10px; align-items: center;">
+                        <input class="input" type="file" name="avatar"
+                               accept="image/png,image/jpeg,image/webp" required
+                               style="padding: 6px; font-size: 13px; height: auto;">
+                        <button class="btn primary" type="submit">Yükle</button>
+                    </div>
+                    <p class="muted" style="font-size: 11px; margin-top: 8px; margin-bottom: 0;">
+                        Desteklenenler: JPG, PNG, WEBP. Maksimum dosya boyutu: 10MB.
+                    </p>
+                </div>
+            </form>
+        </section>
+
+        <section class="card">
+            <div class="card-head">
+                <h3 class="h3">Güvenlik & Şifre</h3>
+            </div>
+            <div class="sep" style="margin-top:0;"></div>
+
+            <form method="post" action="/profile/password">
+
+                <div class="field">
+                    <label class="label">Mevcut Şifre</label>
+                    <input class="input" type="password" name="currentPassword" placeholder="Şu anki şifreniz" required>
+                </div>
+
+                <div class="field" style="margin-top: 16px;">
+                    <label class="label">Yeni Şifre</label>
+                    <input class="input" type="password" name="newPassword" minlength="6" placeholder="En az 6 karakter" required>
+                </div>
+
+                <div class="field">
+                    <label class="label">Yeni Şifre (Tekrar)</label>
+                    <input class="input" type="password" name="newPassword2" minlength="6" placeholder="Şifreyi doğrulayın" required>
+                </div>
+
+                <div class="sep"></div>
+
+                <div style="display: flex; justify-content: flex-end; align-items: center; gap: 12px;">
+                    <button class="btn btn-sm ghost" type="reset">Temizle</button>
+                    <button class="btn primary" type="submit">
+                        <i style="font-style: normal; margin-right: 4px;">🔒</i> Şifreyi Güncelle
+                    </button>
+                </div>
+            </form>
+        </section>
+
+    </div>
+</main>
+
+<div th:replace="fragments/footer :: footer"></div>
+
+</body>
+</html>

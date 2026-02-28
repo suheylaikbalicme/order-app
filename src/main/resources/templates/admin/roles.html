@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Rol Yönetimi - mr-CRM</title>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <link rel="stylesheet" href="/styles.css">
+    <link rel="stylesheet" href="/ui-additions.css">
+    <style>
+        /* Modern Kart */
+        .modern-section { background: #fff; border: 1px solid #e2e8f0; border-radius: 12px; overflow: hidden; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
+        .section-header { padding: 16px 20px; border-bottom: 1px solid #f1f5f9; background: #fff; }
+        .section-title { font-size: 15px; font-weight: 700; color: #1e293b; margin: 0; }
+
+        /* Tablo */
+        .modern-table { width: 100%; border-collapse: collapse; }
+        .modern-table th { background: #f8fafc; color: #64748b; font-weight: 600; padding: 12px 20px; font-size: 12px; text-transform: uppercase; border-bottom: 2px solid #e2e8f0; text-align: left; }
+        .modern-table td { padding: 14px 20px; border-bottom: 1px solid #f1f5f9; vertical-align: middle; color: #334155; }
+        .modern-table tr:last-child td { border-bottom: none; }
+
+        /* Rol Etiketleri */
+        .role-badge { display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 6px; font-weight: 600; font-size: 12px; background: #f1f5f9; color: #475569; border: 1px solid #e2e8f0; }
+        .role-badge.core { background: #e0e7ff; color: #4338ca; border-color: #c7d2fe; }
+        .role-lock-icon { font-size: 10px; opacity: 0.7; }
+
+        /* Form */
+        .create-role-box { background: #f8fafc; padding: 20px; border-radius: 8px; border: 1px dashed #cbd5e1; display: flex; align-items: flex-end; gap: 12px; }
+        .input-modern { padding: 10px; border: 1px solid #e2e8f0; border-radius: 6px; width: 100%; font-size: 14px; }
+        .input-modern:focus { border-color: #4f46e5; outline: none; }
+
+        /* Alerts */
+        .alert-box { padding: 12px; border-radius: 8px; margin-bottom: 20px; font-size: 14px; display: flex; align-items: center; gap: 8px; }
+        .alert-error { background: #fef2f2; color: #991b1b; border: 1px solid #fecaca; }
+        .alert-success { background: #f0fdf4; color: #166534; border: 1px solid #bbf7d0; }
+    </style>
+</head>
+<body>
+
+<div th:replace="fragments/nav :: topbar('Roller')"></div>
+
+<main class="container">
+
+    <header class="page-header" style="margin-bottom: 24px;">
+        <div class="page-title">
+            <h1 class="h1">Rol ve Yetki Yönetimi</h1>
+        </div>
+        <div class="page-actions">
+            <a class="btn ghost" href="/admin/users">← Kullanıcı Listesi</a>
+        </div>
+    </header>
+
+    <div class="alert-box alert-error" th:if="${error}">
+        <span>⚠️</span> <span th:text="${error}">Hata oluştu</span>
+    </div>
+    <div class="alert-box alert-success" th:if="${ok}">
+        <span>✅</span> <span>İşlem başarıyla tamamlandı.</span>
+    </div>
+
+    <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 24px; align-items: start;">
+
+        <section class="modern-section">
+            <div class="section-header">
+                <h3 class="section-title">Tanımlı Roller</h3>
+            </div>
+            <div style="overflow-x: auto;">
+                <table class="modern-table">
+                    <thead>
+                    <tr>
+                        <th style="width: 60px;">ID</th>
+                        <th>Rol Adı</th>
+                        <th>Kullanıcı Sayısı</th>
+                        <th style="text-align: right;">İşlemler</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="r : ${roles}">
+                        <td style="color:#94a3b8; font-family:monospace;" th:text="'#' + ${r.id}">1</td>
+                        <td>
+                            <div class="role-badge" th:classappend="${(r.name == 'ADMIN' or r.name == 'USER' or r.name == 'VIEWER') ? 'core' : ''}">
+                                <span th:if="${r.name == 'ADMIN' or r.name == 'USER' or r.name == 'VIEWER'}" class="role-lock-icon">🔒</span>
+                                <span th:text="${r.name}">ROLE_NAME</span>
+                            </div>
+                            <div th:if="${r.name == 'ADMIN'}" style="font-size: 11px; color: #64748b; margin-top: 4px;">Tam Yetkili Yönetici</div>
+                        </td>
+                        <td>
+                            <span style="font-weight: 600; color: #334155;" th:text="${counts[r.id] + ' Kişi'}">0</span>
+                        </td>
+                        <td style="text-align: right;">
+                            <form method="post" th:action="@{'/admin/roles/' + ${r.id} + '/delete'}" style="display:inline;"
+                                  th:if="${!(r.name == 'ADMIN' or r.name == 'USER' or r.name == 'VIEWER')}">
+                                <button class="btn sm danger" type="submit" data-confirm="Bu rolü silmek istediğinize emin misiniz?">Sil</button>
+                            </form>
+                            <span class="muted" style="font-size: 11px;" th:if="${r.name == 'ADMIN' or r.name == 'USER' or r.name == 'VIEWER'}">Sistem Rolü</span>
+                        </td>
+                    </tr>
+                    <tr th:if="${#lists.isEmpty(roles)}">
+                        <td colspan="4" style="text-align: center; color: #94a3b8; padding: 20px;">Kayıt bulunamadı.</td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <section class="modern-section">
+            <div class="section-header" style="background: #f8fafc;">
+                <h3 class="section-title">+ Yeni Rol Ekle</h3>
+            </div>
+            <div style="padding: 20px;">
+                <form method="post" th:action="@{/admin/roles/create}">
+                    <div style="margin-bottom: 12px;">
+                        <label style="display: block; font-size: 13px; font-weight: 600; color: #475569; margin-bottom: 6px;">Rol Adı</label>
+                        <input class="input-modern" name="name" placeholder="Örn: SALES_MANAGER" required />
+                    </div>
+
+                    <div style="font-size: 11px; color: #64748b; line-height: 1.5; margin-bottom: 16px; background: #fff; padding: 10px; border: 1px solid #e2e8f0; border-radius: 6px;">
+                        Sadece İngilizce karakterler, sayılar ve alt çizgi (_) kullanın.
+                    </div>
+
+                    <button class="btn primary" type="submit" style="width: 100%;">Rolü Oluştur</button>
+                </form>
+            </div>
+        </section>
+
+    </div>
+
+</main>
+
+<div th:replace="fragments/footer :: footer"></div>
+
+</body>
+</html>

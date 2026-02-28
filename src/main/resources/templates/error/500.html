@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <title>Sunucu Hatası</title>
+    <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+
+<div th:replace="fragments/nav :: topbar('Hata')"></div>
+
+<main class="container">
+    <section class="card">
+        <h3>Beklenmeyen hata (500)</h3>
+        <p class="muted">Tekrar deneyin. Devam ederse loglara bakacağız.</p>
+
+        <!--
+          Thymeleaf 3.1 / Spring 6: #request/#session gibi expression utility objeleri default gelmez.
+          Bu yüzden error sayfalarında request attribute okumak yerine Spring Boot error modelindeki
+          "message" alanını kullanıyoruz.
+        -->
+        <div class="alert" th:if="${message != null and !#strings.isEmpty(message)}">
+            <b>Detay:</b>
+            <span th:text="${message}"></span>
+        </div>
+
+        <div class="row" style="margin-top:12px;">
+            <a class="btn" href="/">Ana sayfa</a>
+        </div>
+    </section>
+</main>
+
+
+<div th:replace="fragments/footer :: footer"></div>
+
+</body>
+</html>

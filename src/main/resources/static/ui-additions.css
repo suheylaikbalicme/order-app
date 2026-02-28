@@ -1,0 +1,498 @@
+/* UI additions (non-breaking)
+   Keep your existing styles.css untouched.
+*/
+
+/* Page header */
+.page-header{
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:12px;
+  margin: 18px 0 14px;
+}
+.page-title .h1{ margin:0; font-size: 20px; }
+.page-title .muted{ margin:6px 0 0; }
+.page-actions{ display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
+
+/* Card header row */
+.card-head{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  margin-bottom: 8px;
+}
+.card-head-left{ display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
+.card-head-right{ display:flex; align-items:center; gap:10px; }
+.h3{ margin:0; }
+
+/* Subtle card */
+.card-subtle{ background: #fbfdff; }
+
+/* Table hover (extra) */
+.table-hover tbody tr:hover{ background: rgba(2, 132, 199, 0.06); }
+
+/* Alerts */
+.alert{ margin-top: 14px; }
+.alert-error{
+  border-color: rgba(239,68,68,.25);
+  background: rgba(239,68,68,.06);
+}
+.alert-success{
+  border-color: rgba(16,185,129,.22);
+  background: rgba(16,185,129,.08);
+}
+
+/* Form layout */
+.form-grid{
+  display:grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-top: 10px;
+}
+@media (max-width: 720px){
+  .form-grid{ grid-template-columns: 1fr; }
+}
+.help{
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.form-actions{
+  display:flex;
+  gap:10px;
+  align-items:center;
+  flex-wrap:wrap;
+  margin-top: 14px;
+}
+
+/* Extra badge variants */
+.badge.info{
+  background: rgba(2,132,199,.10);
+  border-color: rgba(2,132,199,.22);
+  color: #075985;
+}
+.badge.warning{
+  background: rgba(245,158,11,.12);
+  border-color: rgba(245,158,11,.22);
+  color: #b45309;
+}
+.badge.success{
+  background: rgba(16,185,129,.12);
+  border-color: rgba(16,185,129,.22);
+  color: #047857;
+}
+.badge.danger{
+  background: rgba(239,68,68,.12);
+  border-color: rgba(239,68,68,.25);
+  color: #991b1b;
+}
+
+/* Empty state (used in list) */
+.empty-state{
+  text-align:center;
+  padding: 18px 12px;
+}
+.empty-title{
+  font-weight: 800;
+  margin-bottom: 6px;
+}
+.empty-actions{
+  margin-top: 12px;
+  display:flex;
+  justify-content:center;
+}
+
+/* Table wrap (in case not present in styles.css) */
+.table-wrap{ overflow:auto; }
+
+/* Filters bar */
+.filters{
+  display:flex;
+  gap:10px;
+  flex-wrap:wrap;
+  margin-top: 10px;
+}
+
+/* Summary box */
+.summary{
+  display:grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 10px;
+  margin-top: 10px;
+}
+.summary > div{
+  background: #f8fafc;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 12px;
+  font-size: 13px;
+}
+@media (max-width: 860px){
+  .summary{ grid-template-columns: 1fr; }
+}
+
+/* Compact hint */
+.hint{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  padding: 10px 12px;
+  border: 1px dashed rgba(100,116,139,.45);
+  border-radius: 14px;
+  background: rgba(248,250,252,.6);
+  font-size: 13px;
+}
+
+/* Checkbox group */
+.checks{
+  display:flex;
+  gap:10px;
+  flex-wrap:wrap;
+  padding:8px 0;
+}
+.checks label{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: #f8fafc;
+  font-weight: 800;
+  color: #334155;
+}
+.checks input{ transform: translateY(0.5px); }
+
+/* Dashboard stats */
+.grid-cards{
+  display:grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 12px;
+}
+@media (max-width: 1100px){
+  .grid-cards{ grid-template-columns: repeat(3, 1fr); }
+}
+@media (max-width: 720px){
+  .grid-cards{ grid-template-columns: 1fr; }
+}
+
+/* Key-Value list */
+.kv{ display: grid; gap: 10px; }
+.kv-row{
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap: 12px;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: #f8fafc;
+}
+.kv-key{ color: var(--muted); font-size: 12px; }
+.kv-val{ font-weight: 900; color: #0f172a; }
+.stat{ padding: 16px; }
+.stat-value{
+  font-size: 24px;
+  font-weight: 900;
+  margin-top: 4px;
+}
+
+/* Customer pick row (Offers/New, Orders/New) */
+.customer-pick{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  flex-wrap:wrap;
+  margin-top: 10px;
+}
+.customer-pick-select{
+  flex: 1 1 420px;
+  min-width: 320px;
+}
+.customer-pick-select select{ width: 100%; }
+.customer-pick-actions{
+  display:flex;
+  gap:10px;
+  align-items:center;
+  justify-content:flex-end;
+  flex: 0 0 auto;
+  flex-wrap:wrap;
+}
+@media (max-width: 720px){
+  .customer-pick-select{ min-width: 260px; }
+  .customer-pick-actions{ width: 100%; justify-content:flex-start; }
+}
+
+/* =============================
+   Edit Pages (Offers/Edit + Orders/Edit) — shared look
+============================= */
+
+.section-title {
+  font-size: 13px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: .04em;
+  color: #6b7280;
+  margin-bottom: 8px;
+}
+
+.badge.soft {
+  display:inline-block;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 11px;
+  background: #eef2ff;
+  color: #4f46e5;
+  text-decoration:none;
+}
+
+.pill-status {
+  display:inline-block;
+  padding: 6px 12px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight:600;
+  border:1px solid #e5e7eb;
+  background:#f9fafb;
+  color:#4b5563;
+}
+.pill-status--DRAFT { background:#eff6ff; color:#1d4ed8; border-color:#bfdbfe; }
+.pill-status--WAITING_APPROVAL { background:#fffbeb; color:#c05621; border-color:#f6ad55; }
+.pill-status--APPROVED { background:#ecfdf3; color:#15803d; border-color:#4ade80; }
+.pill-status--REJECTED { background:#fef2f2; color:#b91c1c; border-color:#fecaca; }
+
+.summary-panel {
+  border-radius: 12px;
+  border: 1px solid #e5e7eb;
+  background: linear-gradient(135deg, #f9fafb, #f3f4f6);
+  padding: 14px 16px;
+  box-shadow: 0 8px 20px rgba(15, 23, 42, 0.05);
+}
+.summary-header { margin-bottom: 10px; }
+.summary-title { font-size: 13px; font-weight: 600; color: #111827; }
+.summary-subtitle { font-size: 12px; color: #6b7280; }
+.summary-row {
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  font-size: 12px;
+  padding: 4px 0;
+  color:#4b5563;
+}
+.summary-row-total {
+  border-top:1px solid #e5e7eb;
+  margin-top:6px;
+  padding-top:8px;
+  font-weight:700;
+  font-size:13px;
+}
+.summary-value { text-align:right; }
+.summary-divider {
+  border:none;
+  border-top:1px dashed #e5e7eb;
+  margin:8px 0;
+}
+
+/* Wider container on edit pages */
+.container.container-wide{ max-width: 1400px; }
+
+/* Split layout: left form + right summary */
+.edit-split{
+  display:grid;
+  grid-template-columns: minmax(0, 3.2fr) minmax(260px, 1.3fr);
+  gap: 24px;
+  align-items:flex-start;
+}
+@media (max-width: 980px){
+  .edit-split{ grid-template-columns: 1fr; }
+}
+
+/* Left column vertical rhythm */
+.edit-left-stack{
+  display:flex;
+  flex-direction:column;
+  gap:20px;
+}
+
+/* Reusable panel box (soft sections inside cards) */
+.panel-box{
+  border-radius:10px;
+  border:1px solid #e5e7eb;
+  padding:14px 16px;
+  background:#fff;
+}
+.panel-box--soft{ background:#f9fafb; }
+
+/* Simple grids for grouping fields */
+.grid-1{ display:grid; grid-template-columns: 1fr; gap:10px; }
+.grid-2{ display:grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap:10px; }
+.grid-3{ display:grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap:10px; }
+@media (max-width: 720px){
+  .grid-2, .grid-3{ grid-template-columns: 1fr; }
+}
+.mb-10{ margin-bottom:10px; }
+
+/* --- Modern input (match new offers/orders feel) --- */
+.input-modern{
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  font-size: 14px;
+  background: #fff;
+  min-height: 42px;
+  line-height: 20px;
+}
+.input-modern:focus{
+  border-color: #4f46e5;
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.10);
+}
+
+/* =============================
+   Line Items (Offers/Edit + Orders/Edit)
+============================= */
+
+/* Container padding on line items card body */
+.line-items-body{
+  border-top: 1px solid #e5e7eb;
+  padding: 12px 18px 16px;
+}
+
+/* Add-row bar (match new pages: compact + aligned) */
+.line-add-bar{
+  background: #f1f5f9;
+  padding: 14px;
+  border-radius: 12px;
+  border: 1px solid #e2e8f0;
+  margin-bottom: 12px;
+}
+
+/* Add-row grid */
+.line-add-row{
+  display:grid;
+  grid-template-columns: minmax(0, 3fr) repeat(4, minmax(0, 1fr)) auto;
+  gap:10px;
+  align-items:end;
+  margin-bottom: 10px;
+}
+.line-add-col.wide{ min-width: 320px; }
+
+/* Ensure add button doesn’t stretch weirdly */
+.line-add-btn{
+  height: 42px;
+  padding: 0 16px;
+  white-space: nowrap;
+}
+.line-add-row > button{
+  white-space: nowrap;
+  min-height: 38px;
+}
+.line-add-row .label-sm{ margin-bottom: 6px; }
+
+@media (max-width: 1000px){
+  .line-add-row{
+    grid-template-columns: minmax(0,2fr) repeat(2, minmax(0,1fr));
+    grid-auto-rows:auto;
+  }
+  .line-add-col.wide{ min-width: 0; }
+  .line-add-btn,
+  .line-add-row > button{
+    grid-column: 1 / -1;
+    justify-self: end;
+  }
+}
+
+/* Table should feel edge-to-edge (reduce "empty" gutters) */
+.full-bleed{
+  margin-left: -18px;
+  margin-right: -18px;
+  padding-left: 18px;
+  padding-right: 18px;
+}
+
+/* Compact table */
+.table.compact th,
+.table.compact td{
+  padding: 6px 8px;
+  font-size: 12px;
+}
+
+/* Line items table sizing (prevents huge horizontal scroll on desktop) */
+#itemsTable{
+  width: 100%;
+  table-layout: fixed;
+}
+#itemsTable th,
+#itemsTable td{
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+#itemsTable th:nth-child(1),
+#itemsTable td:nth-child(1){ width: 92px; }
+#itemsTable th:nth-child(2),
+#itemsTable td:nth-child(2){ width: 220px; }
+#itemsTable th:nth-child(3),
+#itemsTable td:nth-child(3){ width: 120px; }
+#itemsTable th:nth-child(4),
+#itemsTable td:nth-child(4){ width: 110px; }
+#itemsTable th:nth-child(5),
+#itemsTable td:nth-child(5){ width: 110px; }
+#itemsTable th:nth-child(6),
+#itemsTable td:nth-child(6){ width: 110px; }
+#itemsTable th:nth-child(7),
+#itemsTable td:nth-child(7){ width: 110px; }
+#itemsTable th:nth-child(8),
+#itemsTable td:nth-child(8){ width: 70px; }
+
+/* Inputs rendered inside the table shouldn't overflow their cells */
+#itemsTable input,
+#itemsTable select,
+#itemsTable textarea{
+  width: 100%;
+  min-width: 0;
+}
+
+/* Prefer full-width table on desktop, but keep horizontal scroll on smaller screens */
+.line-items-wrap{ overflow-x: auto; }
+@media (min-width: 1100px){
+  .line-items-wrap{ overflow-x: visible; }
+}
+
+/* --- Patch-3: Revize UX helpers --- */
+.input.is-invalid {
+  border-color: #ef4444 !important;
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.15) !important;
+}
+
+.btn.disabled,
+.btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+/* --- Patch-5.3: Revision screens layout --- */
+.rev-table-wrap{ overflow-x: auto; }
+@media (min-width: 1100px){
+  .rev-table-wrap{ overflow-x: visible; }
+}
+
+.rev-table{ table-layout: fixed; width: 100%; }
+.rev-table th,
+.rev-table td{ vertical-align: top; }
+
+.rev-summary{
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+}
+
+.rev-meta{ color: rgba(15,23,42,0.75); font-size: 12px; }
+
+.rev-changes{ display:flex; flex-wrap: wrap; gap: 6px; }
+
+.muted{ color: rgba(15,23,42,0.6); font-size: 12px; }

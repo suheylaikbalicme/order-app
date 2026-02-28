@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title th:text="'Audit Log - ' + ${appBrandName}">Audit Log</title>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+
+    <link rel="stylesheet" href="/styles.css">
+    <link rel="stylesheet" href="/styles-layout-fix.css">
+    <link rel="stylesheet" href="/ui-additions.css">
+
+    <style>
+        .audit-wrap { max-width: 1200px; margin: 0 auto; }
+        .audit-card { background: #fff; border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow-sm); }
+        .audit-head { padding: 16px 18px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+        .audit-title { margin: 0; font-size: 18px; font-weight: 700; color: var(--text); }
+        .audit-sub { margin: 2px 0 0 0; color: var(--muted); font-size: 12px; }
+
+        .audit-filters { padding: 14px 18px; border-bottom: 1px solid var(--border); background: rgba(255,255,255,0.6); }
+        .audit-grid { display: grid; grid-template-columns: 180px 180px 220px 150px 150px 1fr; gap: 10px; align-items: end; }
+        .audit-grid .field { display: flex; flex-direction: column; gap: 6px; }
+        .audit-grid label { font-size: 11px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; }
+        .audit-grid select, .audit-grid input { width: 100%; height: 38px; border-radius: 10px; border: 1px solid var(--border); padding: 0 10px; background: #fff; }
+        .audit-actions { display: flex; gap: 10px; justify-content: flex-end; }
+        .btn { height: 38px; padding: 0 14px; border-radius: 10px; border: 1px solid var(--border); background: #fff; font-weight: 600; cursor: pointer; }
+        .btn-primary { background: var(--primary); color: #fff; border-color: transparent; }
+        .btn-ghost { background: transparent; }
+
+        .audit-table-wrap { overflow: auto; }
+        table.audit-table { width: 100%; border-collapse: separate; border-spacing: 0; }
+        .audit-table thead th { position: sticky; top: 0; z-index: 2; background: #f8fafc; border-bottom: 1px solid var(--border); font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; padding: 10px 12px; }
+        .audit-table tbody td { border-bottom: 1px solid var(--border); padding: 10px 12px; font-size: 13px; vertical-align: top; }
+        .audit-table tbody tr:hover { background: rgba(255,255,255,0.75); }
+
+        .badge { display: inline-flex; align-items: center; gap: 6px; padding: 4px 8px; border-radius: 999px; font-size: 11px; font-weight: 700; border: 1px solid rgba(0,0,0,0.06); white-space: nowrap; }
+        .b-create { background: rgba(16,185,129,0.12); }
+        .b-update { background: rgba(59,130,246,0.12); }
+        .b-submit { background: rgba(99,102,241,0.12); }
+        .b-revise { background: rgba(245,158,11,0.14); }
+        .b-approve { background: rgba(34,197,94,0.12); }
+        .b-reject { background: rgba(239,68,68,0.12); }
+        .b-sync { background: rgba(14,165,233,0.12); }
+        .b-other { background: rgba(148,163,184,0.22); }
+
+        .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; }
+        .muted { color: var(--muted); }
+        .link { color: var(--primary); text-decoration: none; font-weight: 700; }
+        .link:hover { text-decoration: underline; }
+
+        .audit-foot { padding: 12px 18px; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+        .pager { display: flex; gap: 8px; align-items: center; }
+        .pager a { text-decoration: none; }
+        .pager .pill { padding: 6px 10px; border: 1px solid var(--border); border-radius: 999px; font-size: 12px; color: var(--text); background: #fff; }
+        .pager .pill.disabled { opacity: .5; pointer-events: none; }
+
+        /* Modal */
+        .modal-backdrop { position: fixed; inset: 0; background: rgba(15,23,42,0.55); display: none; align-items: center; justify-content: center; padding: 18px; z-index: 50; }
+        .modal { width: min(900px, 96vw); background: #fff; border-radius: 14px; border: 1px solid var(--border); box-shadow: 0 20px 60px rgba(0,0,0,0.25); overflow: hidden; }
+        .modal-head { padding: 12px 14px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+        .modal-head h3 { margin: 0; font-size: 14px; }
+        .modal-body { padding: 14px; }
+        .modal pre { white-space: pre-wrap; word-break: break-word; margin: 0; background: #0b1220; color: #e2e8f0; padding: 12px; border-radius: 12px; }
+        .x { border: 1px solid var(--border); background: #fff; border-radius: 10px; height: 34px; padding: 0 10px; cursor: pointer; }
+
+        @media (max-width: 1100px) { .audit-grid { grid-template-columns: 1fr 1fr 1fr; } }
+        @media (max-width: 700px)  { .audit-grid { grid-template-columns: 1fr; } .audit-actions { justify-content: stretch; } .audit-actions .btn { width: 100%; } }
+    </style>
+</head>
+<body>
+<div th:replace="fragments/nav :: nav"></div>
+
+<main class="content">
+    <div class="audit-wrap">
+        <div class="audit-card">
+            <div class="audit-head">
+                <div>
+                    <h1 class="audit-title">Audit Log</h1>
+                </div>
+                <div class="muted" th:text="'Kayıt: ' + ${result.totalElements}"></div>
+            </div>
+
+            <div class="audit-filters">
+                <form method="get" action="/admin/audit">
+                    <div class="audit-grid">
+                        <div class="field">
+                            <label>Entity</label>
+                            <select name="entityType">
+                                <option value="" th:selected="${entityType} == null">Hepsi</option>
+                                <option th:each="t : ${entityTypes}" th:value="${t}" th:text="${t}" th:selected="${t} == ${entityType}"></option>
+                            </select>
+                        </div>
+                        <div class="field">
+                            <label>Action</label>
+                            <select name="action">
+                                <option value="" th:selected="${action} == null">Hepsi</option>
+                                <option th:each="a : ${actions}" th:value="${a}" th:text="${a}" th:selected="${a} == ${action}"></option>
+                            </select>
+                        </div>
+                        <div class="field">
+                            <label>Actor</label>
+                            <input name="actor" placeholder="örn: admin" th:value="${actor}" />
+                        </div>
+                        <div class="field">
+                            <label>Başlangıç</label>
+                            <input type="date" name="from" th:value="${from}" />
+                        </div>
+                        <div class="field">
+                            <label>Bitiş</label>
+                            <input type="date" name="to" th:value="${to}" />
+                        </div>
+                        <div class="field">
+                            <label> </label>
+                            <div class="audit-actions">
+                                <button class="btn btn-primary" type="submit">Uygula</button>
+                                <a class="btn btn-ghost" href="/admin/audit">Temizle</a>
+                            </div>
+                        </div>
+                    </div>
+                    <input type="hidden" name="size" th:value="${size}" />
+                </form>
+            </div>
+
+            <div class="audit-table-wrap">
+                <table class="audit-table" id="auditTable">
+                    <thead>
+                    <tr>
+                        <th style="width: 150px;">Tarih</th>
+                        <th style="width: 120px;">Entity</th>
+                        <th style="width: 120px;">Action</th>
+                        <th style="width: 140px;">Actor</th>
+                        <th>Mesaj</th>
+                        <th style="width: 140px;">Detay</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:if="${result.content.size()} == 0">
+                        <td colspan="6" class="muted">Kayıt bulunamadı.</td>
+                    </tr>
+                    <tr th:each="row : ${result.content}">
+                        <td>
+                            <div th:text="${#temporals.format(row.createdAt, 'yyyy-MM-dd HH:mm')}"></div>
+                            <div class="muted mono" th:text="'#' + ${row.id}"></div>
+                        </td>
+                        <td>
+                            <div class="mono" th:text="${row.entityType}"></div>
+                            <div>
+                                <a class="link" th:href="${row.entityType.name() == 'OFFER' ? '/offers/' + row.entityId + '/edit' : (row.entityType.name() == 'ORDER' ? '/orders/' + row.entityId + '/edit' : '#')}" th:text="${row.entityId != null ? row.entityId : '-'}"></a>
+                            </div>
+                        </td>
+                        <td>
+                            <span class="badge"
+                                  th:classappend="${row.action.name() == 'CREATE' ? ' b-create' : (row.action.name() == 'UPDATE' ? ' b-update' : (row.action.name() == 'SUBMIT' || row.action.name() == 'RESUBMIT' ? ' b-submit' : (row.action.name() == 'REVISE' ? ' b-revise' : (row.action.name() == 'APPROVE' ? ' b-approve' : (row.action.name() == 'REJECT' ? ' b-reject' : (row.action.name() == 'SYNC' ? ' b-sync' : ' b-other'))))))}"
+                                  th:text="${row.action}">
+                            </span>
+                        </td>
+                        <td>
+                            <div th:text="${row.actorUsername != null ? row.actorUsername : '-'}"></div>
+                        </td>
+                        <td>
+                            <div th:text="${row.message != null ? row.message : '-'}"></div>
+                        </td>
+                        <td>
+                            <button class="btn" type="button"
+                                    th:attr="data-id=${row.id},data-meta=${row.metadata},data-msg=${row.message}" th:disabled="${row.metadata == null or #strings.isEmpty(row.metadata)}">
+                                Detay
+                            </button>
+                            <div class="muted" th:if="${row.metadata == null or #strings.isEmpty(row.metadata)}">—</div>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="audit-foot">
+                <div class="muted" th:text="'Sayfa ' + (${result.number} + 1) + ' / ' + ${result.totalPages}"></div>
+                <div class="pager">
+                    <a th:href="@{/admin/audit(entityType=${entityType},action=${action},actor=${actor},from=${from},to=${to},page=${result.number-1},size=${size})}" class="pill" th:classappend="${result.first} ? ' disabled'" >Önceki</a>
+                    <a th:href="@{/admin/audit(entityType=${entityType},action=${action},actor=${actor},from=${from},to=${to},page=${result.number+1},size=${size})}" class="pill" th:classappend="${result.last} ? ' disabled'" >Sonraki</a>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</main>
+
+<div th:replace="fragments/footer :: footer"></div>
+
+<div class="modal-backdrop" id="auditModal">
+    <div class="modal">
+        <div class="modal-head">
+            <h3 id="auditModalTitle">Detay</h3>
+            <button class="x" type="button" id="auditModalClose">Kapat</button>
+        </div>
+        <div class="modal-body">
+            <div class="muted" id="auditModalMsg" style="margin-bottom: 10px"></div>
+            <pre id="auditModalPre" class="mono"></pre>
+        </div>
+    </div>
+</div>
+
+<script src="/admin-audit.js"></script>
+</body>
+</html>

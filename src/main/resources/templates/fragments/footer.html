@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+
+<div th:fragment="footer">
+    <footer class="footer">
+        <div class="footer-inner">
+            <div>
+                <span th:text="${#strings.isEmpty(appFooterText) ? ('© ' + T(java.time.Year).now() + ' ' + appBrandName) : appFooterText}">© 2026 mr-CRM</span>
+                <span> • Customer Relationship Management by • </span>
+                <a href="https://www.mrpyazilim.com" target="_blank" rel="noopener noreferrer">
+                    mrpyazilim.com
+                </a>
+            </div>
+
+            <div class="muted">Spring Boot • Thymeleaf • PostgreSQL</div>
+        </div>
+    </footer>
+</div>
+
+
+
+</body>
+</html>

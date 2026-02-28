@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <title>Logo’dan Müşteri İçe Aktar</title>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <link rel="stylesheet" href="/styles.css">
+    <link rel="stylesheet" href="/ui-additions.css">
+</head>
+<body>
+
+<div th:replace="fragments/nav :: topbar('Logo’dan Müşteri İçe Aktar')"></div>
+
+<main class="container">
+    <header class="page-header">
+        <div class="page-title">
+            <h1 class="h1">Logo’dan Müşteri İçe Aktar</h1>
+        </div>
+        <div class="page-actions">
+            <a class="btn" th:href="${returnUrl}">Geri</a>
+            <input type="hidden" id="returnUrl" th:value="${returnUrl}" />
+        </div>
+    </header>
+
+    <section class="card" style="padding:16px;">
+        <div class="row" style="gap:10px; align-items:flex-end; flex-wrap:wrap;">
+            <div style="min-width:260px; flex:1;">
+                <label class="label">Ara (kod / isim)</label>
+                <input id="q" class="input" placeholder="Örn: CARI001 veya ABC LTD"/>
+            </div>
+            <div style="min-width:180px;">
+                <label class="label">Liste</label>
+                <select id="limit" class="select">
+                    <option value="10">10</option>
+                    <option value="20" selected>20</option>
+                    <option value="50">50</option>
+                </select>
+            </div>
+            <button id="btnLoad" class="btn">Logo’dan Getir</button>
+        </div>
+
+        <div class="alert" id="alert" style="display:none;"></div>
+
+        <div style="margin-top:14px; overflow:auto;">
+            <table class="table" id="tbl">
+                <thead>
+                <tr>
+                    <th style="width:160px;">Kod</th>
+                    <th>Ünvan</th>
+                    <th style="width:160px;"></th>
+                </tr>
+                </thead>
+                <tbody id="tbody"></tbody>
+
+            </table>
+        </div>
+    </section>
+</main>
+
+<script src="/mrcrm-helpers.js" defer></script>
+<script src="/customers-import.js" defer></script>
+
+<div th:replace="fragments/footer :: footer"></div>
+
+</body>
+</html>

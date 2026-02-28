@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <title>Kullanıcı Yönetimi - mr-CRM</title>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <link rel="stylesheet" href="/styles.css">
+    <link rel="stylesheet" href="/ui-additions.css">
+
+    <style>
+        /* ===== Card / Base ===== */
+        .modern-card{
+          background:#fff;
+          border:1px solid #e2e8f0;
+          border-radius:14px;
+          box-shadow:0 1px 3px rgba(0,0,0,0.06);
+          overflow:hidden;
+          margin-bottom:16px;
+        }
+        .card-header{
+          padding:16px 18px;
+          border-bottom:1px solid #f1f5f9;
+          display:flex;
+          justify-content:space-between;
+          align-items:center;
+          background:#fff;
+          gap:12px;
+          flex-wrap:wrap;
+        }
+        .card-title{
+          font-size:15px;
+          font-weight:800;
+          color:#0f172a;
+          margin:0;
+          letter-spacing:-0.2px;
+        }
+        .subtle{ color:#64748b; font-size:12px; }
+
+        /* ===== Tabs ===== */
+        .tabs-bar{
+          display:flex;
+          gap:10px;
+          align-items:center;
+          flex-wrap:wrap;
+          margin: 8px 0 14px;
+        }
+
+        .tabs{
+          display:inline-flex;
+          background:#f1f5f9;
+          border:1px solid #e2e8f0;
+          border-radius:14px;
+          padding:4px;
+          gap:4px;
+          flex: 1 1 auto;
+          max-width: 620px;
+        }
+        .tab-btn{
+          border:0;
+          background:transparent;
+          padding:10px 12px;
+          border-radius:10px;
+          cursor:pointer;
+          font-weight:800;
+          font-size:13px;
+          color:#475569;
+          display:flex;
+          gap:8px;
+          align-items:center;
+          justify-content:center;
+          flex:1;
+          min-width: 180px;
+          white-space:nowrap;
+        }
+        .tab-btn.active{
+          background:#fff;
+          color:#0f172a;
+          box-shadow:0 1px 2px rgba(0,0,0,0.08);
+          border:1px solid #e2e8f0;
+        }
+        .tab-chip{
+          padding:2px 8px;
+          border-radius:999px;
+          font-size:11px;
+          font-weight:900;
+          background:#e0e7ff;
+          color:#4338ca;
+        }
+
+        @media (max-width: 520px){
+          .tab-btn{ min-width: 140px; padding:10px 10px; font-size:12px; }
+          .tabs{ max-width: 100%; }
+        }
+
+        .tab-panel{ display:none; }
+        .tab-panel.active{ display:block; }
+
+        /* ===== Table ===== */
+        .table-wrap{ overflow:auto; }
+        .modern-table{ width:100%; border-collapse:collapse; min-width: 980px; }
+        .modern-table th{
+          background:#f8fafc;
+          color:#64748b;
+          font-weight:800;
+          padding:12px 14px;
+          font-size:12px;
+          text-transform:uppercase;
+          border-bottom:2px solid #e2e8f0;
+          text-align:left;
+          white-space:nowrap;
+        }
+        .modern-table td{
+          padding:14px;
+          border-bottom:1px solid #f1f5f9;
+          vertical-align:top;
+          font-size:14px;
+          color:#334155;
+        }
+        .modern-table tr:hover td{ background:#fbfdff; }
+        .modern-table tr:last-child td{ border-bottom:none; }
+
+        /* ===== Badges ===== */
+        .badge{
+          padding:4px 10px;
+          border-radius:999px;
+          font-size:11px;
+          font-weight:900;
+          text-transform:uppercase;
+          display:inline-block;
+          margin-right:6px;
+          margin-bottom:6px;
+          letter-spacing:0.3px;
+        }
+        .bg-indigo{ background:#e0e7ff; color:#4338ca; }
+        .bg-green{ background:#dcfce7; color:#15803d; }
+        .bg-red{ background:#fee2e2; color:#b91c1c; }
+        .bg-slate{ background:#f1f5f9; color:#475569; }
+
+        /* ===== Role pills ===== */
+        .role-selector{ display:flex; flex-wrap:wrap; gap:8px; margin-top:8px; }
+        .role-option{ position:relative; cursor:pointer; }
+        .role-option input{ position:absolute; opacity:0; height:0; width:0; }
+        .role-label{
+          display:inline-block;
+          padding:7px 12px;
+          background:#f1f5f9;
+          border:1px solid #cbd5e1;
+          border-radius:999px;
+          font-size:12px;
+          color:#64748b;
+          transition:all .16s ease;
+          user-select:none;
+        }
+        .role-option input:checked ~ .role-label{
+          background:#4f46e5;
+          color:#fff;
+          border-color:#4f46e5;
+        }
+
+        /* ===== Inputs ===== */
+        .input-modern{
+          width:100%;
+          padding:10px 12px;
+          border:1px solid #e2e8f0;
+          border-radius:12px;
+          font-size:13px;
+          background:#fff;
+        }
+        .input-modern:focus{
+          border-color:#4f46e5;
+          outline:none;
+          box-shadow:0 0 0 3px rgba(79,70,229,0.12);
+        }
+
+        /* ===== Action boxes ===== */
+        .action-box{
+          background:#f8fafc;
+          border-radius:12px;
+          padding:10px;
+          margin-top:10px;
+          border:1px dashed #e2e8f0;
+        }
+        .action-title{
+          font-size:11px;
+          font-weight:900;
+          color:#94a3b8;
+          text-transform:uppercase;
+          margin-bottom:6px;
+          display:block;
+          letter-spacing:0.5px;
+        }
+
+        /* ===== Form layout (Create) ===== */
+        .form-wrap{ padding:16px 18px; }
+        .form-grid{
+          display:grid;
+          grid-template-columns: 1fr 1fr;
+          gap:14px;
+        }
+        @media (max-width: 860px){
+          .form-grid{ grid-template-columns: 1fr; }
+        }
+        .form-group label{ display:block; font-size:13px; font-weight:800; color:#475569; margin-bottom:6px; }
+        .form-footer{
+          margin-top:14px;
+          padding-top:14px;
+          border-top:1px solid #f1f5f9;
+          display:flex;
+          justify-content:flex-end;
+          gap:10px;
+          flex-wrap:wrap;
+        }
+
+        /* ===== User info ===== */
+        .muted-id{ font-weight:900; color:#cbd5e1; }
+        .user-title{ font-weight:900; color:#0f172a; font-size:15px; }
+        .user-meta{ font-size:12px; color:#94a3b8; margin-top:2px; }
+    </style>
+</head>
+
+<body>
+<div th:replace="~{fragments/nav :: topbar('Kullanıcılar')}"></div>
+
+<main class="container">
+
+    <header class="page-header" style="margin-bottom: 8px;">
+        <div class="page-title">
+            <h1 class="h1">Kullanıcı Yönetimi</h1>
+        </div>
+        <div class="page-actions" style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
+            <a class="btn ghost" href="/admin/roles">Rol Tanımları &rarr;</a>
+        </div>
+    </header>
+
+    <!-- Tabs -->
+    <div class="tabs-bar">
+        <div class="tabs" role="tablist" aria-label="Kullanıcı yönetimi sekmeleri">
+            <button id="tabUsers" class="tab-btn active" type="button" role="tab"
+                    aria-selected="true" aria-controls="panelUsers"
+                    onclick="switchTab('users')">
+                Kullanıcılar
+                <span class="tab-chip" th:text="${users.size()}">0</span>
+            </button>
+
+            <button id="tabCreate" class="tab-btn" type="button" role="tab"
+                    aria-selected="false" aria-controls="panelCreate"
+                    onclick="switchTab('create')">
+                + Yeni Kullanıcı
+            </button>
+        </div>
+    </div>
+
+    <!-- Panel: USERS -->
+    <section id="panelUsers" class="tab-panel active" role="tabpanel" aria-labelledby="tabUsers">
+        <section class="modern-card">
+            <div class="card-header">
+                <div>
+                    <h3 class="card-title">Kayıtlı Kullanıcılar</h3>
+                </div>
+                <span class="badge bg-indigo" th:text="${users.size()} + ' Kullanıcı'">0</span>
+            </div>
+
+            <div class="table-wrap">
+                <table class="modern-table">
+                    <thead>
+                    <tr>
+                        <th style="width:72px;">ID</th>
+                        <th>Kullanıcı</th>
+                        <th style="width:120px;">Durum</th>
+                        <th style="min-width: 360px;">Rol Yönetimi</th>
+                        <th style="min-width: 320px; text-align:right;">Güvenlik & İşlemler</th>
+                    </tr>
+                    </thead>
+
+                    <tbody>
+                    <tr th:each="u : ${users}">
+                        <td><span class="muted-id" th:text="'#' + ${u.id}">#1</span></td>
+
+                        <td>
+                            <div class="user-title" th:text="${u.username}">username</div>
+                            <div class="user-meta"
+                                 th:text="${u.createdAt != null ? 'Kayıt: ' + #temporals.format(u.createdAt, 'dd.MM.yyyy') : '-'}">Date</div>
+
+                            <div style="margin-top:10px;">
+                                <span class="badge bg-slate">Roller</span>
+                                <span class="badge bg-indigo" th:each="r : ${u.roles}"
+                                      th:text="${#strings.replace(r.name, 'ROLE_', '')}">ADMIN</span>
+                            </div>
+                        </td>
+
+                        <td>
+              <span class="badge"
+                    th:classappend="${u.enabled} ? 'bg-green' : 'bg-red'"
+                    th:text="${u.enabled} ? 'AKTİF' : 'PASİF'">DURUM</span>
+                        </td>
+
+                        <td>
+                            <div class="action-box">
+                                <span class="action-title">Rolleri Düzenle</span>
+                                <form method="post" th:action="@{'/admin/users/' + ${u.id} + '/roles'}">
+                                    <div class="role-selector">
+                                        <label class="role-option" th:each="r : ${roles}">
+                                            <input type="checkbox" name="roles" th:value="${r.name}"
+                                                   th:checked="${#lists.contains(u.roles.![name], r.name)}"/>
+                                            <span class="role-label" th:text="${#strings.replace(r.name, 'ROLE_', '')}">ADMIN</span>
+                                        </label>
+                                    </div>
+
+                                    <div style="margin-top:10px; text-align:right;">
+                                        <button class="btn sm primary" type="submit" style="font-size:11px; padding:6px 12px;">Kaydet</button>
+                                    </div>
+                                </form>
+                            </div>
+                        </td>
+
+                        <td style="text-align:right;">
+                            <div style="display:flex; flex-direction:column; gap:10px; align-items:flex-end;">
+
+                                <form method="post" th:action="@{'/admin/users/' + ${u.id} + '/enabled'}">
+                                    <input type="hidden" name="enabled" th:value="${!u.enabled}"/>
+                                    <button class="btn sm ghost" type="submit"
+                                            th:classappend="${u.enabled} ? 'danger' : 'success'"
+                                            th:text="${u.enabled ? 'Hesabı Pasife Al' : 'Hesabı Aktifleştir'}">İşlem</button>
+                                </form>
+
+                                <div class="action-box" style="width: 320px; text-align:left;">
+                                    <span class="action-title">Şifre Sıfırla</span>
+                                    <form method="post" th:action="@{'/admin/users/' + ${u.id} + '/reset-password'}"
+                                          style="display:flex; gap:8px; align-items:center;">
+                                        <input class="input-modern" type="password" name="newPassword"
+                                               placeholder="Yeni şifre..." required
+                                               style="padding:9px 10px; font-size:12px;" />
+                                        <button class="btn sm" type="submit" style="font-size:11px;">Sıfırla</button>
+                                    </form>
+                                </div>
+
+                            </div>
+                        </td>
+                    </tr>
+
+                    <tr th:if="${#lists.isEmpty(users)}">
+                        <td colspan="5" style="padding: 40px; text-align:center; color:#94a3b8;">
+                            Kullanıcı bulunamadı.
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </section>
+
+    <!-- Panel: CREATE -->
+    <section id="panelCreate" class="tab-panel" role="tabpanel" aria-labelledby="tabCreate">
+        <section class="modern-card">
+            <div class="card-header">
+                <div>
+                    <h3 class="card-title">+ Yeni Kullanıcı Oluştur</h3>
+                </div>
+                <span class="badge bg-indigo">Yönetim</span>
+            </div>
+
+            <div class="form-wrap">
+                <form method="post" th:action="@{/admin/users}" id="createUserForm">
+
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label>Kullanıcı Adı</label>
+                            <input type="text" name="username" class="input-modern" placeholder="Örn: ahmet.yilmaz" required/>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Geçici Şifre</label>
+                            <input type="password" name="password" class="input-modern" placeholder="******" required/>
+                        </div>
+
+                        <div class="form-group" style="grid-column: 1 / -1;">
+                            <label>Hesap Durumu</label>
+                            <label style="display:inline-flex; align-items:center; gap:10px; cursor:pointer;">
+                                <input type="checkbox" name="enabled" checked
+                                       style="width:16px; height:16px; accent-color:#15803d;"/>
+                                <span style="font-size:13px; color:#334155;">Oluşturulduğunda aktif olsun</span>
+                            </label>
+                        </div>
+
+                        <div class="form-group" style="grid-column: 1 / -1;">
+                            <label>Kullanıcı Rolleri</label>
+                            <div style="background:#fff; padding:12px; border-radius:12px; border:1px dashed #cbd5e1;">
+                                <div class="role-selector" id="createRoles">
+                                    <label class="role-option" th:each="r : ${roles}">
+                                        <input type="checkbox" name="roles" th:value="${r.name}"/>
+                                        <span class="role-label" th:text="${#strings.replace(r.name, 'ROLE_', '')}">ADMIN</span>
+                                    </label>
+                                </div>
+                                <div class="subtle" style="margin-top:10px;">* En az bir rol seçilmelidir.</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-footer">
+                        <button class="btn ghost" type="button" onclick="switchTab('users')">Vazgeç</button>
+                        <button class="btn primary" type="submit">Kullanıcıyı Oluştur</button>
+                    </div>
+
+                </form>
+            </div>
+        </section>
+    </section>
+
+</main>
+
+<div th:replace="~{fragments/footer :: footer}"></div>
+
+<script>
+    function switchTab(which){
+      const usersBtn = document.getElementById('tabUsers');
+      const createBtn = document.getElementById('tabCreate');
+      const usersPanel = document.getElementById('panelUsers');
+      const createPanel = document.getElementById('panelCreate');
+
+      const isUsers = which === 'users';
+
+      usersBtn.classList.toggle('active', isUsers);
+      createBtn.classList.toggle('active', !isUsers);
+
+      usersBtn.setAttribute('aria-selected', String(isUsers));
+      createBtn.setAttribute('aria-selected', String(!isUsers));
+
+      usersPanel.classList.toggle('active', isUsers);
+      createPanel.classList.toggle('active', !isUsers);
+
+      // hash ile hatırlasın
+      location.hash = isUsers ? '#users' : '#create';
+
+      if (!isUsers){
+        // yeni kullanıcı tab'ında ilk inputa fokus
+        const first = createPanel.querySelector('input[name="username"]');
+        if (first) setTimeout(() => first.focus(), 50);
+      } else {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+    }
+
+    // Rol seçilmeden submit olmasın
+    document.getElementById('createUserForm')?.addEventListener('submit', function(e){
+      const checked = document.querySelectorAll('#createRoles input[type="checkbox"]:checked').length;
+      if (checked === 0){
+        e.preventDefault();
+        alert('Lütfen en az bir rol seçin.');
+      }
+    });
+
+    // Sayfa açılırken hash'e göre tab seç
+    (function initTabFromHash(){
+      const h = (location.hash || '').toLowerCase();
+      if (h === '#create') switchTab('create');
+      else switchTab('users');
+    })();
+</script>
+
+</body>
+</html>

@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<body>
+
+<div th:fragment="topbar(pageTitle)">
+    <header class="topbar">
+        <div class="topbar-inner">
+            <div class="brand">
+                <a href="/" class="brand-link">
+                    <img src="/img/logo.png" th:attr="alt=${appBrandName}" alt="mr-CRM" class="brand-logo">
+                    <div class="brand-text">
+                        <div class="title" th:text="${appBrandName}">mr-CRM</div>
+                        <div class="page" th:text="${pageTitle}">Sayfa</div>
+                    </div>
+                </a>
+            </div>
+
+            <nav class="nav">
+                <!-- Menüler login olmadan görünmesin -->
+                <div sec:authorize="isAuthenticated()" style="display:contents;">
+                    <a href="/dashboard">Dashboard</a>
+
+                    <div class="dropdown">
+                        <button class="nav-link" type="button">Satış <span class="caret">▾</span></button>
+                        <div class="dropdown-menu">
+                            <a href="/offers">Teklifler</a>
+                            <a href="/offers/new" sec:authorize="hasAnyRole('ADMIN','USER')">Yeni Teklif</a>
+                            <div class="dropdown-sep"></div>
+                            <a href="/orders">Siparişler</a>
+                            <a href="/orders/new" sec:authorize="hasAnyRole('ADMIN','USER')">Yeni Sipariş</a>
+                        </div>
+                    </div>
+
+                    <div class="dropdown">
+                        <button class="nav-link" type="button">Müşteriler <span class="caret">▾</span></button>
+                        <div class="dropdown-menu">
+                            <a href="/customers">Müşterileri Görüntüle</a>
+                            <a href="/customers/new" sec:authorize="hasAnyRole('ADMIN','USER')">Yeni Müşteri Ekle</a>
+                            <a href="/customers/import" sec:authorize="hasAnyRole('ADMIN','USER')">Logo’dan İçe Aktar</a>
+                        </div>
+                    </div>
+
+                    <a href="/admin/sync" sec:authorize="hasRole('ADMIN')">Sync</a>
+
+                    <div class="dropdown" sec:authorize="hasRole('ADMIN')">
+                        <button class="nav-link" type="button">Yönetim <span class="caret">▾</span></button>
+                        <div class="dropdown-menu">
+                            <a href="/admin/users">Kullanıcılar</a>
+                            <a href="/admin/roles">Roller &amp; Yetkiler</a>
+                            <a href="/admin/settings">Sistem Ayarları</a>
+                            <div class="dropdown-sep"></div>
+                            <a href="/admin/audit">Audit Log</a>
+                        </div>
+                    </div>
+
+
+                    <div class="right">
+                        <div class="dropdown" sec:authorize="isAuthenticated()">
+                            <button class="pill" type="button">
+                                <span class="avatar-sm">
+                                    <img src="/avatars/me" alt="avatar" onerror="this.style.display='none'; this.nextElementSibling.style.display='inline-flex';">
+                                    <span class="avatar-fallback" style="display:none;">👤</span>
+                                </span>
+                                <span sec:authentication="name">user</span>
+                                <span class="caret">▾</span>
+                            </button>
+                            <div class="dropdown-menu dropdown-menu-right">
+                                <a href="/profile">Hesabım</a>
+                                <div class="dropdown-sep"></div>
+                                <a href="/logout">Çıkış</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <a href="/login" sec:authorize="!isAuthenticated()">Giriş</a>
+            </nav>
+        </div>
+    </header>
+
+    <!-- ✅ Confirm sistemi sadece login sonrası yüklensin -->
+    <div sec:authorize="isAuthenticated()">
+
+        <!-- Confirm Modal -->
+        <div id="confirmModal">
+            <div class="modal-overlay"></div>
+            <div class="modal-box">
+                <h3 data-modal-title>Onay</h3>
+                <p class="muted" data-modal-message>Emin misiniz?</p>
+                <div class="row" style="justify-content:flex-end; margin-top:14px;">
+                    <button class="btn" data-modal-cancel>Vazgeç</button>
+                    <button class="btn danger" data-modal-ok>Devam</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ✅ TEK script + cache-bust -->
+        <script src="/ui.js?v=4" defer></script>
+    </div>
+</div>
+
+</body>
+</html>

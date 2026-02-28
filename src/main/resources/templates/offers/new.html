@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <title th:text="'Yeni Teklif - ' + ${appBrandName}">Yeni Teklif - mr-CRM</title>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <link rel="stylesheet" href="/styles.css">
+    <link rel="stylesheet" href="/ui-additions.css">
+    <style>
+        /* Layout & Grid */
+        .page-layout { display: grid; grid-template-columns: 1fr; gap: 24px; }
+
+        /* Modern Kartlar */
+        .modern-section {
+            background: #fff; border-radius: 12px; border: 1px solid #e2e8f0;
+            padding: 24px; box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+            transition: all 0.3s ease;
+        }
+        .section-title { font-size: 16px; font-weight: 700; color: #1e293b; margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
+        .section-title span { background: #e0e7ff; color: #4338ca; width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; margin-right: 8px; }
+
+        /* KİLİTLİ ALAN STİLİ */
+        .locked {
+            opacity: 0.5;
+            pointer-events: none;
+            filter: grayscale(100%);
+            user-select: none;
+        }
+
+        /* Form Elemanları */
+        .input-modern { width: 100%; padding: 10px; border: 1px solid #e2e8f0; border-radius: 6px; font-size: 14px; background: #fff; }
+        .input-modern:focus { border-color: #4f46e5; outline: none; box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1); }
+        .label-sm { font-size: 12px; font-weight: 600; color: #64748b; margin-bottom: 4px; display: block; }
+
+        /* Müşteri Bilgi Kutusu */
+        .cust-info-box { background: #f8fafc; border-radius: 8px; padding: 16px; border: 1px dashed #cbd5e1; font-size: 13px; margin-top: 12px; }
+        .cust-info-box div { margin-bottom: 4px; }
+        .cust-info-box strong { color: #334155; }
+
+        /* Tablo ve Toplamlar */
+        .item-table-wrap { border: 1px solid #e2e8f0; border-radius: 8px; overflow: hidden; margin-top: 16px; }
+        .item-table th { background: #f1f5f9; font-size: 11px; text-transform: uppercase; color: #64748b; padding: 12px; text-align: left; }
+        .item-table td { border-top: 1px solid #e2e8f0; padding: 12px; font-size: 14px; }
+        .totals-area { background: #f8fafc; padding: 20px; border-radius: 8px; display: flex; flex-direction: column; align-items: flex-end; gap: 8px; }
+        .total-row { display: flex; justify-content: space-between; width: 250px; font-size: 14px; color: #64748b; }
+        .total-row.grand { font-size: 18px; font-weight: 800; color: #1e293b; border-top: 1px solid #cbd5e1; padding-top: 8px; margin-top: 8px; }
+    </style>
+</head>
+<body>
+
+<div th:replace="fragments/nav :: topbar('Yeni Teklif')"></div>
+
+<main class="container">
+
+    <header class="page-header" style="margin-bottom: 24px;">
+        <div class="page-title">
+            <h1 class="h1">Yeni Teklif Oluştur</h1>
+        </div>
+        <div class="page-actions">
+            <a class="btn ghost" href="/offers">İptal / Geri</a>
+        </div>
+    </header>
+
+    <div class="page-layout">
+
+        <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 24px;">
+
+            <section class="modern-section">
+                <h3 class="section-title"><span>1</span> Müşteri Seçimi</h3>
+
+                <div style="display: flex; gap: 10px;">
+                    <select id="customerSelect" class="input-modern" style="flex:1;">
+                        <option value="">Bir müşteri seçiniz...</option>
+                        <option th:each="c : ${customers}"
+                                th:value="${c.customerCode}"
+                                th:attr="data-name=${c.customerName},data-phone=${c.phone},data-email=${c.email},data-address=${c.address}"
+                                th:text="${c.customerCode + ' - ' + c.customerName}">
+                        </option>
+                    </select>
+                    <a href="/customers/new?return=/offers/new" class="btn sm ghost" style="white-space: nowrap;">+ Yeni</a>
+                </div>
+
+                <div id="customerInfoPanel" class="cust-info-box" style="display: none;">
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+                        <div><strong>Ünvan:</strong> <span id="custName">-</span></div>
+                        <div><strong>Telefon:</strong> <span id="custPhone">-</span></div>
+                        <div><strong>E-posta:</strong> <span id="custEmail">-</span></div>
+                        <div style="grid-column: 1/-1;"><strong>Adres:</strong> <span id="custAddress">-</span></div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="modern-section">
+                <h3 class="section-title"><span>2</span> Belge Ayarları</h3>
+                <div style="display: grid; gap: 12px;">
+                    <div>
+                        <label class="label-sm">Teklif Tarihi</label>
+                        <input id="offerDate" class="input-modern" type="date"/>
+                    </div>
+
+                    <div style="display: flex; gap: 10px;">
+                        <div style="flex:1;">
+                            <label class="label-sm">Geçerlilik (Gün)</label>
+                            <input id="validityDays" class="input-modern" type="number" value="7"/>
+                        </div>
+                        <div style="flex:1;">
+                            <label class="label-sm">Vade (Gün)</label>
+                            <input id="paymentDays" class="input-modern" type="number" value="30"/>
+                        </div>
+                    </div>
+
+                    <div style="display: flex; gap: 10px;">
+                        <div style="flex:1;">
+                            <label class="label-sm">Para Birimi</label>
+                            <select id="currency" class="input-modern">
+                                <option value="TRY" th:selected="${defaultCurrency} == 'TRY'">TRY</option>
+                                <option value="USD" th:selected="${defaultCurrency} == 'USD'">USD</option>
+                                <option value="EUR" th:selected="${defaultCurrency} == 'EUR'">EUR</option>
+                            </select>
+                        </div>
+                        <div style="flex:1;">
+                            <label class="label-sm">Kur</label>
+                            <input id="exchangeRate" class="input-modern" type="number" step="0.0001" value="1"/>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+
+        <section class="modern-section locked" id="itemsSection">
+            <h3 class="section-title"><span>3</span> Ürün ve Hizmetler</h3>
+
+            <div style="background: #f1f5f9; padding: 16px; border-radius: 8px; display: grid; grid-template-columns: 3fr 1fr 1fr 1fr 1fr auto; gap: 10px; align-items: end;">
+                <div>
+                    <label class="label-sm">Stok / Hizmet</label>
+                    <select id="itemSelect" class="input-modern"></select>
+                </div>
+                <div>
+                    <label class="label-sm">Miktar</label>
+                    <input id="qty" class="input-modern" type="number" value="1"/>
+                </div>
+                <div>
+                    <label class="label-sm">Birim Fiyat</label>
+                    <input id="unitPrice" class="input-modern" type="number" step="0.01"/>
+                </div>
+                <div>
+                    <label class="label-sm">İskonto %</label>
+                    <input id="itemDiscount" class="input-modern" type="number" value="0"/>
+                </div>
+                <div>
+                    <label class="label-sm">KDV %</label>
+                    <input id="itemVat" class="input-modern" type="number" th:attr="value=${defaultVatRate}" value="20"/>
+                </div>
+                <button class="btn primary" id="addItemBtn" type="button" style="height: 42px;">Ekle</button>
+            </div>
+
+            <div class="item-table-wrap">
+                <table class="table item-table" id="itemsTable" style="width: 100%; border-collapse: collapse;">
+                    <thead>
+                    <tr>
+                        <th style="width: 10%;">Kod</th>
+                        <th style="width: 30%;">Ad / Açıklama</th>
+                        <th style="text-align: center;">Miktar</th>
+                        <th style="text-align: right;">Birim Fiyat</th>
+                        <th style="text-align: center;">İsk. %</th>
+                        <th style="text-align: center;">KDV %</th>
+                        <th style="text-align: right;">Toplam</th>
+                        <th style="width: 50px;"></th>
+                    </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+                <div id="emptyTableMsg" style="padding: 20px; text-align: center; color: #94a3b8; font-size: 13px;">Henüz kalem eklenmedi.</div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 300px; gap: 24px; margin-top: 24px;">
+                <div>
+                    <label class="label-sm">Teklif Notu</label>
+                    <textarea id="note" class="input-modern" rows="4" placeholder="Teslimat koşulları vb..."></textarea>
+                </div>
+
+                <div class="totals-area">
+                    <div class="total-row"><span>Ara Toplam:</span> <span id="subTotal">0.00</span></div>
+                    <div class="total-row"><span>İskonto:</span> <span id="discountTotal" style="color:#ef4444;">0.00</span></div>
+                    <div class="total-row"><span>KDV:</span> <span id="vatTotal">0.00</span></div>
+                    <div class="total-row grand"><span>GENEL TOPLAM:</span> <span id="grandTotal">0.00</span></div>
+                </div>
+            </div>
+
+            <div class="form-actions" style="margin-top: 30px; text-align: right; border-top: 1px solid #e2e8f0; padding-top: 20px;">
+                <button class="btn ghost" id="saveDraftBtn" type="button" style="margin-right: 10px;">Taslak Olarak Kaydet</button>
+                <button class="btn primary" id="submitBtn" type="button" style="padding: 10px 30px;">Teklifi Oluştur</button>
+            </div>
+        </section>
+
+    </div>
+</main>
+
+<script src="/mrcrm-helpers.js"></script>
+<script src="/offers.js"></script>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+
+        // --- MOCK DATA ---
+        const mockStocks = [
+            { code: "STK-001", name: "Laptop - MacBook Pro M3", price: 75000 },
+            { code: "STK-002", name: "Kablosuz Mouse Logitech", price: 1500 },
+            { code: "STK-003", name: "27 inç Monitör Dell", price: 8500 },
+            { code: "HIZ-001", name: "Kurulum ve Destek Hizmeti", price: 2000 },
+            { code: "YAZ-001", name: "Ofis Yazılım Lisansı", price: 3500 }
+        ];
+
+        // Elemanlar
+        const dom = {
+            custSelect: document.getElementById('customerSelect'),
+            infoPanel: document.getElementById('customerInfoPanel'),
+            itemsSection: document.getElementById('itemsSection'), // Kilitlenecek bölüm
+            itemSelect: document.getElementById('itemSelect'),
+            addItemBtn: document.getElementById('addItemBtn'),
+            tableBody: document.querySelector('#itemsTable tbody'),
+            emptyMsg: document.getElementById('emptyTableMsg'),
+            qty: document.getElementById('qty'),
+            price: document.getElementById('unitPrice'),
+            discount: document.getElementById('itemDiscount'),
+            vat: document.getElementById('itemVat'),
+            subTotal: document.getElementById('subTotal'),
+            discountTotal: document.getElementById('discountTotal'),
+            vatTotal: document.getElementById('vatTotal'),
+            grandTotal: document.getElementById('grandTotal'),
+            saveBtn: document.getElementById('submitBtn')
+        };
+
+        // --- KİLİT MEKANİZMASI ---
+        dom.custSelect.addEventListener('change', function() {
+            const opt = this.options[this.selectedIndex];
+            if (this.value && opt) {
+                // Kilidi aç
+                dom.infoPanel.style.display = 'block';
+                dom.itemsSection.classList.remove('locked');
+
+                // Bilgi doldur
+                document.getElementById('custName').innerText = opt.getAttribute('data-name') || '-';
+                document.getElementById('custPhone').innerText = opt.getAttribute('data-phone') || '-';
+                document.getElementById('custEmail').innerText = opt.getAttribute('data-email') || '-';
+                document.getElementById('custAddress').innerText = opt.getAttribute('data-address') || '-';
+            } else {
+                // Kilitle
+                dom.infoPanel.style.display = 'none';
+                dom.itemsSection.classList.add('locked');
+            }
+        });
+
+        // --- STOK LİSTESİ ---
+        dom.itemSelect.innerHTML = '<option value="">Seçiniz...</option>';
+        mockStocks.forEach(item => {
+            const opt = document.createElement('option');
+            opt.value = item.code;
+            opt.text = `${item.code} - ${item.name}`;
+            opt.setAttribute('data-price', item.price);
+            opt.setAttribute('data-name', item.name);
+            dom.itemSelect.appendChild(opt);
+        });
+
+        dom.itemSelect.addEventListener('change', function() {
+            const opt = this.options[this.selectedIndex];
+            if(opt && opt.getAttribute('data-price')) {
+                dom.price.value = opt.getAttribute('data-price');
+            }
+        });
+
+        // --- EKLEME VE HESAP ---
+        dom.addItemBtn.addEventListener('click', function() {
+            const code = dom.itemSelect.value;
+            const name = dom.itemSelect.options[dom.itemSelect.selectedIndex]?.getAttribute('data-name');
+            const qty = parseFloat(dom.qty.value) || 0;
+            const price = parseFloat(dom.price.value) || 0;
+            const disc = parseFloat(dom.discount.value) || 0;
+            const vat = parseFloat(dom.vat.value) || 0;
+
+            if(!code || qty <= 0) { alert("Lütfen ürün ve miktar girin."); return; }
+
+            const rawTotal = qty * price;
+            const discAmount = rawTotal * (disc/100);
+            const afterDisc = rawTotal - discAmount;
+            const vatAmount = afterDisc * (vat/100);
+            const lineTotal = afterDisc + vatAmount;
+
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td>${code}</td>
+                <td>${name}</td>
+                <td style="text-align:center">${qty}</td>
+                <td style="text-align:right">${price.toFixed(2)}</td>
+                <td style="text-align:center">%${disc}</td>
+                <td style="text-align:center">%${vat}</td>
+                <td style="text-align:right; font-weight:bold;">${lineTotal.toFixed(2)}</td>
+                <td style="text-align:right">
+                    <button type="button" class="btn sm danger" onclick="this.closest('tr').remove(); calculateTotals();" style="padding:4px 8px;">Sil</button>
+                    <input type="hidden" class="h-raw" value="${rawTotal}">
+                    <input type="hidden" class="h-disc" value="${discAmount}">
+                    <input type="hidden" class="h-vat" value="${vatAmount}">
+                    <input type="hidden" class="h-total" value="${lineTotal}">
+                </td>
+            `;
+            dom.tableBody.appendChild(row);
+            dom.emptyMsg.style.display = 'none';
+            calculateTotals();
+        });
+
+        window.calculateTotals = function() {
+            let s=0, d=0, v=0, g=0;
+            document.querySelectorAll('#itemsTable tbody tr').forEach(row => {
+                s += parseFloat(row.querySelector('.h-raw').value) || 0;
+                d += parseFloat(row.querySelector('.h-disc').value) || 0;
+                v += parseFloat(row.querySelector('.h-vat').value) || 0;
+                g += parseFloat(row.querySelector('.h-total').value) || 0;
+            });
+            dom.subTotal.innerText = s.toFixed(2);
+            dom.discountTotal.innerText = d.toFixed(2);
+            dom.vatTotal.innerText = v.toFixed(2);
+            dom.grandTotal.innerText = g.toFixed(2);
+
+            if(dom.tableBody.children.length === 0) dom.emptyMsg.style.display = 'block';
+        };
+
+        // --- URL Parametre Kontrolü ---
+        const params = new URLSearchParams(window.location.search);
+        const importedCode = params.get('importedCustomerCode');
+        if(importedCode) {
+            dom.custSelect.value = importedCode;
+            dom.custSelect.dispatchEvent(new Event('change'));
+        }
+
+        dom.saveBtn.addEventListener('click', function(){
+            alert("Teklif Kaydı Başarılı! (Demo Modu)");
+        });
+    });
+</script>
+
+<div th:replace="fragments/footer :: footer"></div>
+
+</body>
+</html>

@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <title>Sync Dashboard</title>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <link rel="stylesheet" href="/styles.css">
+    <link rel="stylesheet" href="/ui-additions.css">
+</head>
+<body>
+
+<div th:replace="fragments/nav :: topbar('Sync Dashboard')"></div>
+
+<main class="container">
+
+    <header class="page-header">
+        <div class="page-title">
+            <h1 class="h1">Sync Dashboard</h1>
+        </div>
+    </header>
+
+    <section class="card">
+        <div class="card-head"><div class="card-head-left"><h3 class="h3">Özet</h3><span class="badge info">Demo / İskelet</span></div></div>
+        <div class="table-wrap">
+            <table class="table">
+                <thead>
+                <tr><th>Tip</th><th style="width:140px;">PENDING</th><th style="width:140px;">SYNCED</th><th style="width:140px;">FAILED</th></tr>
+                </thead>
+                <tbody>
+                <tr><td>Müşteri</td><td><span class="badge pending" th:text="${pendingCustomers}">0</span></td><td><span class="badge success" th:text="${syncedCustomers}">0</span></td><td><span class="badge danger" th:text="${failedCustomers}">0</span></td></tr>
+                <tr><td>Sipariş</td><td><span class="badge pending" th:text="${pendingOrders}">0</span></td><td><span class="badge success" th:text="${syncedOrders}">0</span></td><td><span class="badge danger" th:text="${failedOrders}">0</span></td></tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <section class="card" style="margin-top:16px;">
+        <div class="card-head"><div class="card-head-left"><h3 class="h3">Son Failed Müşteriler</h3></div></div>
+        <div class="table-wrap">
+            <table class="table">
+                <thead><tr><th style="width:90px;">ID</th><th style="width:180px;">Kod</th><th>Ad</th><th>Hata</th></tr></thead>
+                <tbody>
+                <tr th:if="${#lists.isEmpty(lastFailedCustomers)}"><td colspan="4" class="muted">FAILED müşteri yok.</td></tr>
+                <tr th:each="c : ${lastFailedCustomers}"><td th:text="${c.id}"></td><td th:text="${c.customerCode}"></td><td th:text="${c.customerName}"></td><td th:text="${c.syncError != null ? c.syncError : '-'}"></td></tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <section class="card" style="margin-top:16px;">
+        <div class="card-head"><div class="card-head-left"><h3 class="h3">Son Failed Siparişler</h3></div></div>
+        <div class="table-wrap">
+            <table class="table">
+                <thead><tr><th style="width:90px;">ID</th><th>Hata</th></tr></thead>
+                <tbody>
+                <tr th:if="${#lists.isEmpty(lastFailedOrders)}"><td colspan="2" class="muted">FAILED sipariş yok.</td></tr>
+                <tr th:each="o : ${lastFailedOrders}"><td th:text="${o.id}"></td><td th:text="${o.syncError != null ? o.syncError : '-'}"></td></tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+</main>
+
+
+<div th:replace="fragments/footer :: footer"></div>
+
+</body>
+</html>

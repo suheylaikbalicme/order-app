@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <title>Müşteri Düzenle - mr-CRM</title>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <link rel="stylesheet" href="/styles.css">
+    <link rel="stylesheet" href="/ui-additions.css">
+</head>
+<body>
+
+<div th:replace="fragments/nav :: topbar('Müşteri Düzenle')"></div>
+
+<main class="container" th:with="c=${customer}">
+
+    <header class="page-header">
+        <div class="page-title">
+            <h1 class="h1">Müşteri Düzenle</h1>
+            <p class="muted" th:text="${c.customerCode} + ' • ' + ${c.customerName}">KOD • Ad</p>
+        </div>
+        <div class="page-actions">
+            <a class="btn ghost" th:href="${returnTo}">Geri</a>
+        </div>
+    </header>
+
+    <section class="card">
+        <div class="card-head">
+            <div class="card-head-left">
+                <h3 class="h3">Bilgiler</h3>
+                <span class="badge" th:text="${c.syncStatus}">PENDING</span>
+            </div>
+        </div>
+
+        <form class="form-grid" th:action="@{'/customers/' + ${c.id} + '/edit'}" method="post">
+            <input type="hidden" name="return" th:value="${returnTo}"/>
+
+            <div class="field">
+                <label for="customerCode">Müşteri Kodu</label>
+                <input id="customerCode" name="customerCode" autocomplete="off" required th:value="${c.customerCode}" />
+                <div class="help">Zorunlu</div>
+            </div>
+
+            <div class="field">
+                <label for="customerName">Müşteri Adı</label>
+                <input id="customerName" name="customerName" autocomplete="off" required th:value="${c.customerName}" />
+                <div class="help">Zorunlu</div>
+            </div>
+
+            <div class="field">
+                <label for="phone">Telefon</label>
+                <input id="phone" name="phone" autocomplete="off" required th:value="${c.phone}" />
+                <div class="help">Zorunlu</div>
+            </div>
+
+            <div class="field">
+                <label for="email">E-posta</label>
+                <input id="email" name="email" type="email" autocomplete="off" required th:value="${c.email}" />
+                <div class="help">Zorunlu</div>
+            </div>
+
+            <div class="field" style="grid-column:1/-1;">
+                <label for="address">Adres</label>
+                <textarea id="address" name="address" rows="3" required th:text="${c.address}"></textarea>
+                <div class="help">Zorunlu</div>
+            </div>
+
+            <div class="field" style="grid-column:1/-1;">
+                <label for="notes">Notlar (opsiyonel)</label>
+                <textarea id="notes" name="notes" rows="3" placeholder="Not..." th:text="${c.notes}"></textarea>
+                <div class="help">Notları buradan güncelleyebilirsin.</div>
+            </div>
+
+            <div class="field" style="grid-column:1/-1;">
+                <button class="btn primary" type="submit">Kaydet</button>
+                <a class="btn" th:href="${returnTo}">Vazgeç</a>
+            </div>
+        </form>
+
+        <div class="alert" style="margin-top:12px;">
+            <strong>Not:</strong> Müşteri güncellenince SyncStatus tekrar <strong>PENDING</strong> olur (Logo’ya yeniden gönderilmesi gerekebilir).
+        </div>
+
+    </section>
+
+</main>
+
+
+<div th:replace="fragments/footer :: footer"></div>
+
+</body>
+</html>

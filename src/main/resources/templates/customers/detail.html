@@ -1,0 +1,518 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <title>Müşteri Detay - mr-CRM</title>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <link rel="stylesheet" href="/styles.css">
+    <link rel="stylesheet" href="/ui-additions.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        :root {
+            --primary: #4f46e5;
+            --bg-body: #f8fafc;
+            --border-color: #e2e8f0;
+        }
+        body { background-color: var(--bg-body); color: #334155; }
+
+        /* Layout Grid */
+        .layout-grid {
+            display: grid;
+            grid-template-columns: 1fr 340px; /* Sol geniş, Sağ sabit */
+            gap: 24px;
+            margin-top: 20px;
+        }
+        @media (max-width: 980px) { .layout-grid { grid-template-columns: 1fr; } }
+
+        /* Kart Yapısı */
+        .modern-card {
+            background: #fff;
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+            overflow: hidden;
+            margin-bottom: 20px;
+        }
+
+        /* Profil Kartı (Sağ Taraf) */
+        .profile-hero {
+            background: linear-gradient(135deg, #e0e7ff 0%, #fae8ff 100%);
+            padding: 24px 20px;
+            text-align: center;
+            position: relative; /* Edit butonu için gerekli */
+        }
+
+        /* --- YENİ DÜZENLE BUTONU (FAB Style) --- */
+        .edit-fab {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            width: 32px;
+            height: 32px;
+            background: rgba(255, 255, 255, 0.8);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #4f46e5;
+            text-decoration: none;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            transition: all 0.2s;
+            font-size: 14px;
+        }
+        .edit-fab:hover {
+            background: #fff;
+            transform: scale(1.1);
+            color: #4338ca;
+        }
+
+        .profile-avatar {
+            width: 64px; height: 64px;
+            background: #fff; color: var(--primary);
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 24px; font-weight: bold;
+            margin: 0 auto 12px auto;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+        .kv-list .kv-item {
+            display: flex; justify-content: space-between;
+            padding: 12px 0;
+            border-bottom: 1px solid #f1f5f9;
+            font-size: 14px;
+        }
+        .kv-item:last-child { border-bottom: none; }
+        .kv-label { color: #64748b; }
+        .kv-value { font-weight: 600; color: #334155; text-align: right; max-width: 60%; word-break: break-word;}
+
+        /* TAB Sistemi */
+        .tabs-header {
+            display: flex;
+            gap: 24px;
+            padding: 0 24px;
+            border-bottom: 1px solid var(--border-color);
+            background: #fff;
+        }
+        .tab-btn {
+            background: none; border: none;
+            padding: 16px 4px;
+            font-size: 14px; font-weight: 600; color: #64748b;
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            transition: all 0.2s;
+        }
+        .tab-btn:hover { color: var(--primary); }
+        .tab-btn.active {
+            color: var(--primary);
+            border-bottom-color: var(--primary);
+        }
+        .tab-content { display: none; padding: 24px; }
+        .tab-content.active { display: block; }
+
+        /* Etkileşim Timeline */
+        .timeline-item {
+            position: relative;
+            padding-left: 24px;
+            padding-bottom: 24px;
+            border-left: 2px solid #e2e8f0;
+        }
+        .timeline-item:last-child { border-left-color: transparent; }
+        .timeline-dot {
+            position: absolute; left: -9px; top: 0;
+            width: 16px; height: 16px;
+            border-radius: 50%;
+            background: #fff; border: 2px solid var(--primary);
+        }
+        .timeline-content {
+            background: #f8fafc;
+            border-radius: 8px;
+            padding: 12px;
+            margin-top: -4px;
+        }
+
+        /* Helpers */
+        .badge-soft { background: #e0e7ff; color: #4338ca; padding: 2px 8px; border-radius: 6px; font-size: 12px; font-weight: 600; }
+        .badge-green { background: #dcfce7; color: #166534; padding: 2px 8px; border-radius: 6px; font-size: 12px; font-weight: 600; }
+
+        /* Form Elements */
+        .input-clean {
+            width: 100%; padding: 10px 12px;
+            border: 1px solid #e2e8f0; border-radius: 8px; background: #f8fafc;
+        }
+        .input-clean:focus { background: #fff; border-color: var(--primary); outline: none; }
+
+        /* --- GELİŞMİŞ TAKVİM STİLLERİ --- */
+        .calendar { border:none; background:#fff; overflow:hidden; }
+        .cal-head { display:flex; align-items:center; justify-content:space-between; padding:10px 0; border-bottom:1px solid var(--border-color); }
+        .cal-grid { display:grid; grid-template-columns:repeat(7,1fr); border-left:1px solid #f1f5f9; border-top:1px solid #f1f5f9; }
+        .cal-cell { padding:8px 0; text-align:center; border-bottom:1px solid #f1f5f9; border-right:1px solid #f1f5f9; font-size:13px; height: 50px; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; cursor: pointer; transition: background 0.2s; }
+        .cal-dow { background:#f8fafc; font-weight:700; color:#334155; height: auto; padding: 10px 0; cursor: default; }
+        .cal-day:hover { background: #f1f5f9; }
+        .cal-day.muted { color:#94a3b8; cursor:default; }
+
+        /* Olay Noktaları (Dots) */
+        .cal-dots { display: flex; gap: 3px; margin-top: 4px; }
+        .dot { width: 6px; height: 6px; border-radius: 50%; display: inline-block; }
+        .dot.interaction { background-color: #a855f7; } /* Mor */
+        .dot.offer { background-color: #f97316; }       /* Turuncu */
+        .dot.order { background-color: #22c55e; }       /* Yeşil */
+
+        /* Lejant (Açıklama) */
+        .cal-legend { display: flex; gap: 12px; justify-content: center; padding: 10px; font-size: 11px; color: #64748b; background: #f8fafc; border-top: 1px solid #f1f5f9; }
+        .legend-item { display: flex; align-items: center; gap: 4px; }
+    </style>
+</head>
+<body>
+
+<div th:replace="fragments/nav :: topbar('Müşteri Detay')"></div>
+
+<main class="container" th:with="c=${customer}">
+
+    <header style="display:flex; justify-content:space-between; align-items:center; margin-bottom:24px;">
+        <div>
+            <div style="display:flex; align-items:center; gap:12px;">
+                <h1 class="h1" style="margin:0;" th:text="${c.customerName}">Müşteri Adı</h1>
+                <span class="badge-soft" th:text="${c.syncStatus}">SYNC</span>
+            </div>
+            <p style="color:#64748b; margin:4px 0 0 0;" th:text="${'Müşteri Kodu: ' + c.customerCode}">KOD</p>
+        </div>
+        <div style="display:flex; gap:10px;">
+            <a class="btn ghost" href="/customers">Listeye Dön</a>
+        </div>
+    </header>
+
+    <div th:if="${param.fileError}" class="alert" style="margin-bottom:12px; border-color:#fecaca; background:#fef2f2; color:#991b1b; padding:10px; border-radius:8px;">
+        Dosya yüklenemedi: <span th:text="${param.fileError}"></span>
+    </div>
+
+    <div class="layout-grid">
+
+        <div class="main-content">
+
+            <div class="modern-card">
+                <div class="tabs-header">
+                    <button class="tab-btn active" onclick="openTab(event, 'tab-interactions')">Etkileşimler</button>
+                    <button class="tab-btn" onclick="openTab(event, 'tab-commercial')">Ticari Kayıtlar</button>
+                    <button class="tab-btn" onclick="openTab(event, 'tab-files')">Dosyalar</button>
+                </div>
+
+                <div id="tab-interactions" class="tab-content active">
+                    <div style="background:#f8fafc; padding:16px; border-radius:12px; margin-bottom:24px;">
+                        <form class="form-grid" th:action="@{'/customers/' + ${c.id} + '/interactions'}" method="post" style="grid-template-columns: repeat(4, 1fr); gap:12px;">
+                            <div style="grid-column: span 1;">
+                                <input class="input-clean" type="date" name="interactionDate" required />
+                            </div>
+                            <div style="grid-column: span 1;">
+                                <select class="input-clean" name="interactionType" required>
+                                    <option value="CALL">Telefon</option>
+                                    <option value="MEETING">Toplantı</option>
+                                    <option value="EMAIL">E-posta</option>
+                                    <option value="NOTE">Not</option>
+                                </select>
+                            </div>
+                            <div style="grid-column: span 2;">
+                                <input class="input-clean" name="title" placeholder="Başlık (Örn: Fiyat görüşmesi)" required />
+                            </div>
+                            <div style="grid-column: 1/-1;">
+                                <textarea class="input-clean" name="description" rows="2" placeholder="Detaylı açıklama..."></textarea>
+                            </div>
+                            <div style="grid-column: 1/-1; text-align:right;">
+                                <button class="btn primary sm" type="submit">+ Kaydet</button>
+                            </div>
+                        </form>
+                    </div>
+
+                    <div id="interactionList">
+                        <div th:if="${#lists.isEmpty(interactions)}" class="muted">Henüz etkileşim yok.</div>
+
+                        <div class="timeline-item data-row"
+                             data-type="interaction"
+                             th:each="i : ${interactions}"
+                             th:attr="data-date=${i.interactionDate}">
+                            <div class="timeline-dot"></div>
+                            <div class="timeline-content">
+                                <div style="display:flex; justify-content:space-between; margin-bottom:4px;">
+                                    <div>
+                                        <span class="badge-soft" th:text="${i.interactionType}">TYPE</span>
+                                        <strong style="margin-left:8px;" th:text="${i.title}">Title</strong>
+                                    </div>
+                                    <div style="font-size:12px; color:#94a3b8;" th:text="${i.interactionDate}">DATE</div>
+                                </div>
+                                <p style="font-size:13px; color:#475569; margin:0;" th:text="${i.description}"></p>
+                                <div style="margin-top:8px; display:flex; justify-content:flex-end; gap:8px;" sec:authorize="hasAnyRole('ADMIN','USER')">
+                                    <a style="font-size:11px; color:var(--primary);" th:href="@{'/customers/' + ${c.id} + '/interactions/' + ${i.id} + '/edit'}">Düzenle</a>
+                                    <form th:action="@{'/customers/' + ${c.id} + '/interactions/' + ${i.id} + '/delete'}" method="post" style="display:inline;">
+                                        <button type="submit" style="background:none; border:none; color:#ef4444; font-size:11px; cursor:pointer;" onclick="return confirm('Silmek istiyor musun?');">Sil</button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="tab-commercial" class="tab-content">
+                    <h4 style="margin:0 0 12px;">Aktif Teklifler</h4>
+                    <div th:if="${#lists.isEmpty(customerOffers)}" class="muted" style="margin-bottom:24px;">Kayıt yok.</div>
+                    <div th:if="${!#lists.isEmpty(customerOffers)}" style="overflow:auto; margin-bottom:32px;">
+                        <table class="table" style="width:100%;">
+                            <thead style="background:#f8fafc;">
+                            <tr><th>ID</th><th>Tarih</th><th>Durum</th><th>Toplam</th><th>İşlem</th></tr>
+                            </thead>
+                            <tbody>
+                            <tr class="data-row" data-type="offer"
+                                th:each="o : ${customerOffers}"
+                                th:attr="data-date=${o.offerDate}">
+                                <td th:text="${o.id}">1</td>
+                                <td th:text="${o.offerDate}">-</td>
+                                <td><span class="badge-soft" th:text="${o.status}"></span></td>
+                                <td th:text="${o.grandTotal}">0</td>
+                                <td><a class="btn sm" th:href="@{'/offers/' + ${o.id}}">Git</a></td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div style="border-top:1px solid #e2e8f0; margin: 0 -24px 24px -24px;"></div>
+
+                    <h4 style="margin:0 0 12px;">Sipariş Geçmişi</h4>
+                    <div th:if="${#lists.isEmpty(customerOrders)}" class="muted">Sipariş yok.</div>
+                    <div th:if="${!#lists.isEmpty(customerOrders)}" style="overflow:auto;">
+                        <table class="table" style="width:100%;">
+                            <thead style="background:#f8fafc;">
+                            <tr><th>ID</th><th>Tarih</th><th>Durum</th><th>Tutar</th><th>İşlem</th></tr>
+                            </thead>
+                            <tbody>
+                            <tr class="data-row" data-type="order"
+                                th:each="ord : ${customerOrders}"
+                                th:attr="data-date=${ord.orderDate}">
+                                <td th:text="${ord.id}">1</td>
+                                <td th:text="${ord.orderDate}">-</td>
+                                <td><span class="badge-green" th:text="${ord.status}"></span></td>
+                                <td th:text="${ord.grandTotal}">0</td>
+                                <td><a class="btn sm" th:href="@{'/orders/' + ${ord.id}}">Git</a></td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div id="tab-files" class="tab-content">
+                    <div style="background:#f8fafc; border:2px dashed #cbd5e1; border-radius:12px; padding:20px; text-align:center; margin-bottom:24px;">
+                        <form th:action="@{'/customers/' + ${c.id} + '/files'}" method="post" enctype="multipart/form-data" sec:authorize="hasAnyRole('ADMIN','USER')">
+                            <i style="font-size:24px; color:#94a3b8; margin-bottom:8px; display:block;">📂</i>
+                            <input type="file" name="file" required style="margin-bottom:12px;" />
+                            <br>
+                            <button class="btn sm primary" type="submit">Dosyayı Yükle</button>
+                        </form>
+                    </div>
+                    <div class="stack">
+                        <div th:if="${#lists.isEmpty(files)}" class="muted">Henüz dosya yüklenmemiş.</div>
+                        <div class="file-row" th:each="f : ${files}" style="display:flex; justify-content:space-between; padding:12px; border:1px solid #e2e8f0; border-radius:8px; margin-bottom:8px;">
+                            <div style="display:flex; align-items:center; gap:10px;">
+                                <div style="background:#e0e7ff; width:32px; height:32px; border-radius:6px; display:flex; align-items:center; justify-content:center; color:#4338ca; font-weight:bold;">PDF</div>
+                                <div style="font-weight:600; font-size:14px;" th:text="${f.fileName}">Dosya.pdf</div>
+                            </div>
+                            <a class="btn sm" th:href="@{'/customers/' + ${c.id} + '/files/' + ${f.id} + '/download'}">İndir</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="sidebar stack">
+
+            <section class="modern-card">
+                <div class="profile-hero">
+                    <a class="edit-fab" th:href="@{'/customers/' + ${c.id} + '/edit?return=/customers/' + ${c.id}}" title="Düzenle">
+                        <i class="fa-solid fa-pen"></i>
+                    </a>
+
+                    <div class="profile-avatar" th:text="${#strings.substring(c.customerName,0,1)}">A</div>
+                    <h3 style="font-size:18px; font-weight:700; color:#1e293b; margin:0;" th:text="${c.customerName}">Ad</h3>
+                </div>
+                <div class="card-body" style="padding:0;">
+                    <div class="kv-list" style="padding:20px;">
+                        <div class="kv-item">
+                            <span class="kv-label">Telefon</span>
+                            <span class="kv-value" th:text="${c.phone}">-</span>
+                        </div>
+                        <div class="kv-item">
+                            <span class="kv-label">E-posta</span>
+                            <span class="kv-value" th:text="${c.email}">-</span>
+                        </div>
+                        <div class="kv-item">
+                            <span class="kv-label">Adres</span>
+                            <span class="kv-value" th:text="${c.address}">-</span>
+                        </div>
+                        <div class="kv-item" style="display:block; border-bottom:none; padding-bottom:0;">
+                            <span class="kv-label" style="display:block; margin-bottom:4px;">Notlar</span>
+                            <div style="font-size:13px; color:#334155; background:#f8fafc; padding:8px; border-radius:6px;" th:text="${c.notes != null ? c.notes : 'Not yok.'}"></div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="modern-card">
+                <div class="card-header">
+                    <h3>Takvim</h3>
+                </div>
+                <div class="card-body" style="padding:0;">
+                    <div class="calendar" id="calendar" style="border:none; border-radius:0;"></div>
+                    <div class="cal-legend">
+                        <div class="legend-item"><span class="dot interaction"></span> Etkileşim</div>
+                        <div class="legend-item"><span class="dot offer"></span> Teklif</div>
+                        <div class="legend-item"><span class="dot order"></span> Sipariş</div>
+                    </div>
+                </div>
+            </section>
+
+        </div>
+    </div>
+
+</main>
+
+<script>
+    function openTab(evt, tabName) {
+        var i, tabcontent, tablinks;
+        tabcontent = document.getElementsByClassName("tab-content");
+        for (i = 0; i < tabcontent.length; i++) {
+            tabcontent[i].style.display = "none";
+            tabcontent[i].classList.remove("active");
+        }
+        tablinks = document.getElementsByClassName("tab-btn");
+        for (i = 0; i < tablinks.length; i++) {
+            tablinks[i].className = tablinks[i].className.replace(" active", "");
+        }
+        document.getElementById(tabName).style.display = "block";
+        document.getElementById(tabName).classList.add("active");
+        evt.currentTarget.className += " active";
+    }
+
+    // Gelişmiş Takvim Scripti
+    (function(){
+        const calEl = document.getElementById('calendar');
+        if(!calEl) return;
+
+        // 1. Tüm veri kaynaklarını tara (Etkileşim, Teklif, Sipariş)
+        const eventsMap = {}; // Format: 'YYYY-MM-DD': Set('interaction', 'offer', 'order')
+
+        document.querySelectorAll('.data-row').forEach(row => {
+            const date = row.getAttribute('data-date');
+            const type = row.getAttribute('data-type'); // 'interaction', 'offer', 'order'
+
+            if(date && type) {
+                if(!eventsMap[date]) eventsMap[date] = new Set();
+                eventsMap[date].add(type);
+            }
+        });
+
+        let cursor = new Date();
+        cursor.setDate(1);
+
+        function render(){
+            const year = cursor.getFullYear();
+            const month = cursor.getMonth();
+            const first = new Date(year, month, 1);
+            const last = new Date(year, month+1, 0);
+            const startDow = (first.getDay()+6)%7;
+
+            calEl.innerHTML = '';
+
+            // Header
+            const head = document.createElement('div');
+            head.className='cal-head';
+
+            const prev = document.createElement('button');
+            prev.className='btn sm';
+            prev.textContent='‹';
+            prev.onclick=()=>{cursor = new Date(year, month-1, 1); render();};
+
+            const next = document.createElement('button');
+            next.className='btn sm';
+            next.textContent='›';
+            next.onclick=()=>{cursor = new Date(year, month+1, 1); render();};
+
+            const title = document.createElement('div');
+            title.style.fontWeight='800';
+            title.textContent = first.toLocaleString('tr-TR', { month: 'long', year: 'numeric' });
+
+            head.appendChild(prev); head.appendChild(title); head.appendChild(next);
+            calEl.appendChild(head);
+
+            // Grid
+            const grid = document.createElement('div');
+            grid.className='cal-grid';
+
+            const dows = ['Pzt','Sal','Çar','Per','Cum','Cmt','Paz'];
+            for(const d of dows){
+                const cell = document.createElement('div');
+                cell.className='cal-cell cal-dow';
+                cell.textContent=d;
+                grid.appendChild(cell);
+            }
+
+            for(let i=0;i<startDow;i++){
+                const cell=document.createElement('div');
+                cell.className='cal-cell cal-day muted';
+                grid.appendChild(cell);
+            }
+
+            // Günleri oluştur
+            for(let day=1; day<=last.getDate(); day++){
+                const yearStr = year;
+                const monthStr = String(month+1).padStart(2,'0');
+                const dayStr = String(day).padStart(2,'0');
+                const key = `${yearStr}-${monthStr}-${dayStr}`; // YYYY-MM-DD
+
+                const cell = document.createElement('div');
+                cell.className='cal-cell cal-day';
+
+                // Gün numarası
+                const dayNum = document.createElement('span');
+                dayNum.textContent = String(day);
+                cell.appendChild(dayNum);
+
+                // Eğer o günde olay varsa noktaları ekle
+                if(eventsMap[key]) {
+                    const dotsContainer = document.createElement('div');
+                    dotsContainer.className = 'cal-dots';
+
+                    // Öncelik sırasına göre noktaları ekle
+                    ['order', 'offer', 'interaction'].forEach(type => {
+                        if(eventsMap[key].has(type)) {
+                            const dot = document.createElement('span');
+                            dot.className = 'dot ' + type;
+                            dotsContainer.appendChild(dot);
+                        }
+                    });
+                    cell.appendChild(dotsContainer);
+                }
+
+                // Tıklama olayları (Filtreleme veya Tab açma)
+                cell.onclick = () => {
+                    // Basitçe ilgili tabı açıp filtreleyebiliriz (opsiyonel)
+                    if(eventsMap[key]) {
+                        // Eğer etkileşim varsa etkileşim tabını aç
+                        if(eventsMap[key].has('interaction')) {
+                            document.querySelector('button[onclick*="tab-interactions"]').click();
+                        } else if (eventsMap[key].has('offer') || eventsMap[key].has('order')) {
+                            document.querySelector('button[onclick*="tab-commercial"]').click();
+                        }
+                    }
+                };
+
+                grid.appendChild(cell);
+            }
+            calEl.appendChild(grid);
+        }
+
+        render();
+    })();
+</script>
+
+<div th:replace="fragments/footer :: footer"></div>
+
+</body>
+</html>
