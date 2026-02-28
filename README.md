@@ -1,5 +1,6 @@
 # Order App (mr-CRM)
 
+
 Enterprise-style CRM application built with Spring Boot, PostgreSQL, and Thymeleaf.
 
 This project started as an internship (staj) application and evolved into a structured CRM-like system that models real-world business workflows including customer management, offer & order lifecycle tracking, ERP integration concepts, revision history, and audit logging.
@@ -68,6 +69,104 @@ Admin Tools
 
 ARCHITECTURE OVERVIEW
 
+
+------------------------------------------------------------
+
+SCREENSHOTS
+
+### Dashboard
+![Dashboard](docs/dashboard.png)
+
+### Offers
+![Offers](docs/offers.png)
+
+### Admin Panel
+![Admin](docs/admin.png)
+
+### Customers
+![Customers](docs/customer.png)
+
+### Orders
+![Orders](docs/order.png)
+
+### Revisions
+![Revisions](docs/revision.png)
+
+### Audit Logs
+![Audit](docs/audit.png)
+
+------------------------------------------------------------
+
+
+Enterprise-style CRM application built with Spring Boot, PostgreSQL, and Thymeleaf.
+
+This project started as an internship (staj) application and evolved into a structured CRM-like system that models real-world business workflows including customer management, offer & order lifecycle tracking, ERP integration concepts, revision history, and audit logging.
+
+------------------------------------------------------------
+
+PURPOSE OF THE PROJECT
+
+The goal of this project was to go beyond a simple CRUD application and design a more production-like internal business system with:
+
+- Structured domain separation
+- Business workflow transitions
+- Role-based authorization
+- ERP sync logic
+- Revision & audit tracking
+- Database migration discipline
+
+It simulates how an internal CRM/ERP-integrated business system would be designed in a real company environment.
+
+------------------------------------------------------------
+
+CORE FEATURES
+
+Authentication & Authorization
+- Spring Security based login system
+- Role-based access control (ADMIN / USER / VIEWER)
+- Protected admin pages
+
+Customer Management
+- CRM-style customer records
+- Interaction tracking
+- Extended customer fields
+- Import utilities
+
+Offer Management
+- Offer creation & editing
+- Workflow transitions
+- Revision history support
+- Conversion logic
+
+Order Management
+- Order creation & lifecycle
+- Order revisions
+- Status tracking
+- Sync state management
+
+Audit & Traceability
+- Audit log entity
+- Actor tracking
+- Metadata storage
+- Action-based logging
+
+ERP Integration Concept
+- Logo ERP token service
+- Sync jobs
+- Sync status tracking (PENDING / SYNCED / FAILED)
+
+Admin Tools
+- User management
+- Role management
+- Settings pages
+- Export utilities
+- Sync monitoring pages
+
+------------------------------------------------------------
+
+ARCHITECTURE OVERVIEW
+
+ 
 The application follows a layered architecture:
 
 Client (Browser)
@@ -184,4 +283,6 @@ AUTHOR
 
 Süheyla İkbal İçme
 Computer Engineering
+
 Backend & Business Systems Focus
+
